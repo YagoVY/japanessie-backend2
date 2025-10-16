@@ -240,20 +240,57 @@ async function startServer() {
   try {
     console.log('🚀 Starting server initialization...');
     
-    // Initialize services
-    await initializeServices();
+    try {
+      // Initialize services
+      await initializeServices();
+      console.log('✅ Services initialized successfully');
+    } catch (initError) {
+      console.error('❌ Service initialization failed:', initError);
+      console.error('❌ Init error stack:', initError.stack);
+      throw initError;
+    }
     
     console.log('✅ Services initialized, starting HTTP server...');
     
-    // Start HTTP server
-    app.listen(PORT, '0.0.0.0', () => {
-      logger.info(`Server running on port ${PORT}`, {
-        environment: process.env.NODE_ENV || 'production',
-        port: PORT,
-        nodeVersion: process.version,
-        host: '0.0.0.0'
-      });
+    // Add comprehensive error handling for silent crashes
+    process.on('uncaughtException', (err) => {
+      console.error('❌ Uncaught Exception:', err);
+      console.error('❌ Stack trace:', err.stack);
+      process.exit(1);
     });
+
+    process.on('unhandledRejection', (err) => {
+      console.error('❌ Unhandled Rejection:', err);
+      console.error('❌ Stack trace:', err.stack);
+      process.exit(1);
+    });
+    
+    console.log('🔍 DEBUG: About to call app.listen()...');
+    
+    try {
+      const server = app.listen(PORT, '0.0.0.0', () => {
+        console.log(`✅ SUCCESS: Server actually listening on ${PORT}`);
+        logger.info(`Server running on port ${PORT}`, {
+          environment: process.env.NODE_ENV || 'production',
+          port: PORT,
+          nodeVersion: process.version,
+          host: '0.0.0.0'
+        });
+      });
+      
+      server.on('error', (err) => {
+        console.error('❌ Server error:', err);
+        console.error('❌ Server error stack:', err.stack);
+        process.exit(1);
+      });
+      
+      console.log('🔍 DEBUG: app.listen() called, waiting for callback...');
+      
+    } catch (err) {
+      console.error('❌ Failed to start server:', err);
+      console.error('❌ Error stack:', err.stack);
+      process.exit(1);
+    }
 
     // Keep the process alive
     process.on('SIGTERM', () => {
