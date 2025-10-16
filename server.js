@@ -32,7 +32,13 @@ console.log('🔧 Server configuration:', {
   PORT: PORT,
   NODE_ENV: process.env.NODE_ENV || 'production',
   RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
-  RAILWAY_PROJECT_ID: process.env.RAILWAY_PROJECT_ID
+  RAILWAY_PROJECT_ID: process.env.RAILWAY_PROJECT_ID,
+  ALL_ENV_VARS: {
+    PORT: process.env.PORT,
+    NODE_ENV: process.env.NODE_ENV,
+    RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
+    RAILWAY_PROJECT_ID: process.env.RAILWAY_PROJECT_ID
+  }
 });
 
 // Railway-specific configuration
@@ -242,7 +248,7 @@ async function startServer() {
     // Start HTTP server
     app.listen(PORT, '0.0.0.0', () => {
       logger.info(`Server running on port ${PORT}`, {
-        environment: process.env.NODE_ENV,
+        environment: process.env.NODE_ENV || 'production',
         port: PORT,
         nodeVersion: process.version,
         host: '0.0.0.0'
