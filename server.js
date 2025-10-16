@@ -115,12 +115,22 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
+console.log('🔧 Registering routes...');
+console.log('🔧 webhookRoutes type:', typeof webhookRoutes);
+console.log('🔧 printWebhookRoutes type:', typeof printWebhookRoutes);
+
 app.use('/webhooks', webhookRoutes);  // Legacy webhook routes
+console.log('✅ Legacy webhooks route registered');
+
 app.use('/print-webhooks', printWebhookRoutes);  // New print webhook routes
+console.log('✅ Print webhooks route registered');
+
 app.use('/real-coordinates', realCoordinatesRoutes);  // Real coordinates from frontend
 app.use('/simple-print-upload', simplePrintUploadRoutes);  // Simple frontend print file upload
 app.use('/api/orders', orderRoutes);
 app.use('/api/debug', debugRoutes);
+
+console.log('✅ All routes registered successfully');
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -138,6 +148,14 @@ app.get('/', (req, res) => {
     },
     documentation: 'https://github.com/your-repo/tshirt-designer-backend'
   });
+});
+
+// Catch-all debug route to see if ANY requests are hitting the main app
+app.all('*', (req, res, next) => {
+  console.log('🎯 MAIN APP REQUEST:', req.method, req.path);
+  console.log('🎯 Request URL:', req.url);
+  console.log('🎯 Request headers:', Object.keys(req.headers));
+  next();
 });
 
 // 404 handler

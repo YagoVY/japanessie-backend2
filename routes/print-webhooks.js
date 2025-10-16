@@ -5,9 +5,13 @@ const logger = require('../utils/logger');
 const path = require('path');
 const fs = require('fs');
 
+console.log('🚀 Loading print-webhooks.js module...');
+
 const router = express.Router();
 const orderProcessor = new OrderProcessor();
 const printGenerator = new PrintGenerator();
+
+console.log('🚀 print-webhooks.js module loaded successfully');
 
 // Catch-all debug route to see if any requests are hitting the app
 router.all('*', (req, res, next) => {
