@@ -19,6 +19,13 @@ const OrderProcessor = require('./services/order-processor');
 const logger = require('./utils/logger');
 
 const app = express();
+
+// Add request logging middleware at the TOP (before any routes)
+app.use((req, res, next) => {
+  console.log(`📨 Incoming: ${req.method} ${req.path} from ${req.ip}`);
+  next();
+});
+
 // Railway requires using process.env.PORT with NO fallback
 const PORT = process.env.PORT;
 
@@ -191,6 +198,40 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/debug', debugRoutes);
 
 console.log('✅ All routes registered successfully');
+
+// COMPLETE EXPRESS ROUTE AUDIT
+console.log('\n🔍 ===== COMPLETE EXPRESS ROUTE AUDIT =====');
+console.log('Total middleware/routes in stack:', app._router.stack.length);
+
+app._router.stack.forEach((layer, index) => {
+  console.log(`\n[${index}] Layer:`, layer.name);
+  
+  if (layer.route) {
+    // Direct route
+    console.log('  Type: Direct Route');
+    console.log('  Path:', layer.route.path);
+    console.log('  Methods:', Object.keys(layer.route.methods));
+  } else if (layer.name === 'router') {
+    // Mounted router
+    console.log('  Type: Mounted Router');
+    console.log('  Regexp:', layer.regexp.toString());
+    console.log('  Has handle.stack:', !!layer.handle.stack);
+    
+    if (layer.handle.stack) {
+      console.log('  Sub-routes:');
+      layer.handle.stack.forEach((sublayer, subindex) => {
+        if (sublayer.route) {
+          console.log(`    [${subindex}] ${sublayer.route.path} - ${Object.keys(sublayer.route.methods)}`);
+        }
+      });
+    }
+  } else {
+    // Middleware
+    console.log('  Type: Middleware');
+  }
+});
+
+console.log('\n🔍 ===== END ROUTE AUDIT =====\n');
 
 // Root endpoint
 app.get('/', (req, res) => {
