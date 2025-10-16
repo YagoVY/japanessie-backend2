@@ -1,7 +1,7 @@
 providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs-18_x", "chromium", "fontconfig", "snapd"]
+nixPkgs = ["nodejs-18_x", "chromium", "fontconfig"]
 
 [phases.install]
 cmds = [
@@ -10,7 +10,6 @@ cmds = [
   "mkdir -p /usr/share/fonts/truetype/custom",
   "cp assets/fonts/*.ttf /usr/share/fonts/truetype/custom/ 2>/dev/null || true",
   "fc-cache -fv",
-  "snap install chromium || echo 'Snap install failed, continuing with system chromium'"
 ]
 
 [start]
@@ -18,4 +17,5 @@ cmd = "node server.js"
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
-PUPPETEER_EXECUTABLE_PATH = "/snap/bin/chromium"
+PUPPETEER_EXECUTABLE_PATH = "/nix/var/nix/profiles/default/bin/chromium"
+NODE_ENV = "production"

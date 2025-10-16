@@ -59,33 +59,16 @@ class CoordinateScalingGenerator {
         options 
       });
       
-      // Launch headless browser
-      // Find Chromium executable path for Railway
-      const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
-      let executablePath;
+      // Get Puppeteer executable path based on environment
+      const getPuppeteerPath = () => {
+        if (process.env.NODE_ENV === 'production') {
+          return '/nix/var/nix/profiles/default/bin/chromium';
+        }
+        return undefined; // Local development - let Puppeteer use its own
+      };
       
-      if (isRailway) {
-        const fs = require('fs');
-        const possiblePaths = [
-          '/snap/bin/chromium',
-          '/usr/bin/chromium-browser',
-          '/usr/bin/chromium',
-          '/usr/bin/google-chrome',
-          '/usr/bin/google-chrome-stable'
-        ];
-        
-        for (const path of possiblePaths) {
-          if (fs.existsSync(path)) {
-            executablePath = path;
-            logger.info(`Found Chromium at: ${path}`);
-            break;
-          }
-        }
-        
-        if (!executablePath) {
-          throw new Error('Chromium executable not found. Checked paths: ' + possiblePaths.join(', '));
-        }
-      }
+      const executablePath = getPuppeteerPath();
+      logger.info('Using Chromium path:', executablePath || 'default Puppeteer Chrome');
 
       browser = await puppeteer.launch({
         headless: 'new',

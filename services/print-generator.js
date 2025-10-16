@@ -52,33 +52,16 @@ class PrintGenerator {
       const canvasSize = options.canvasSize || { width: 3600, height: 4800 };
       const isTestMode = options.canvasSize !== undefined;
       
-      // Launch headless browser with Railway-optimized settings
-      const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
+      // Get Puppeteer executable path based on environment
+      const getPuppeteerPath = () => {
+        if (process.env.NODE_ENV === 'production') {
+          return '/nix/var/nix/profiles/default/bin/chromium';
+        }
+        return undefined; // Local development - let Puppeteer use its own
+      };
       
-      // Find Chromium executable path for Railway
-      let executablePath;
-      if (isRailway) {
-        const fs = require('fs');
-        const possiblePaths = [
-          '/snap/bin/chromium',
-          '/usr/bin/chromium-browser',
-          '/usr/bin/chromium',
-          '/usr/bin/google-chrome',
-          '/usr/bin/google-chrome-stable'
-        ];
-        
-        for (const path of possiblePaths) {
-          if (fs.existsSync(path)) {
-            executablePath = path;
-            logger.info(`Found Chromium at: ${path}`);
-            break;
-          }
-        }
-        
-        if (!executablePath) {
-          throw new Error('Chromium executable not found. Checked paths: ' + possiblePaths.join(', '));
-        }
-      }
+      const executablePath = getPuppeteerPath();
+      logger.info('Using Chromium path:', executablePath || 'default Puppeteer Chrome');
       
       const puppeteerArgs = [
         '--no-sandbox',
@@ -90,8 +73,8 @@ class PrintGenerator {
         '--disable-gpu'
       ];
       
-      // Railway-specific optimizations
-      if (isRailway) {
+      // Production-specific optimizations
+      if (process.env.NODE_ENV === 'production') {
         puppeteerArgs.push(
           '--disable-web-security',
           '--disable-features=VizDisplayCompositor',
