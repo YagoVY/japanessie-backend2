@@ -251,14 +251,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Catch-all debug route to see if ANY requests are hitting the main app
-app.all('*', (req, res, next) => {
-  console.log('🎯 MAIN APP REQUEST:', req.method, req.path);
-  console.log('🎯 Request URL:', req.url);
-  console.log('🎯 Request headers:', Object.keys(req.headers));
-  next();
-});
-
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -284,6 +276,14 @@ app.use((error, req, res, next) => {
       : error.message,
     ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
   });
+});
+
+// Catch-all debug route at the VERY END (after all other routes and handlers)
+app.all('*', (req, res, next) => {
+  console.log('🎯 MAIN APP REQUEST (catch-all):', req.method, req.path);
+  console.log('🎯 Request URL:', req.url);
+  console.log('🎯 Request headers:', Object.keys(req.headers));
+  next();
 });
 
 // Initialize services
