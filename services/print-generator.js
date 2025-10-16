@@ -55,6 +55,30 @@ class PrintGenerator {
       // Launch headless browser with Railway-optimized settings
       const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
       
+      // Find Chromium executable path for Railway
+      let executablePath;
+      if (process.env.NODE_ENV === 'production' && isRailway) {
+        const fs = require('fs');
+        const possiblePaths = [
+          '/usr/bin/chromium-browser',
+          '/usr/bin/chromium',
+          '/usr/bin/google-chrome',
+          '/usr/bin/google-chrome-stable'
+        ];
+        
+        for (const path of possiblePaths) {
+          if (fs.existsSync(path)) {
+            executablePath = path;
+            logger.info(`Found Chromium at: ${path}`);
+            break;
+          }
+        }
+        
+        if (!executablePath) {
+          throw new Error('Chromium executable not found. Checked paths: ' + possiblePaths.join(', '));
+        }
+      }
+      
       const puppeteerArgs = [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -77,9 +101,7 @@ class PrintGenerator {
       
       browser = await puppeteer.launch({
         headless: 'new',
-        executablePath: process.env.NODE_ENV === 'production'
-          ? (process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium')
-          : undefined, // Uses local Chrome in development
+        executablePath: executablePath,
         args: puppeteerArgs
       });
 

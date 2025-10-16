@@ -63,7 +63,7 @@ class CoordinateScalingGenerator {
       browser = await puppeteer.launch({
         headless: 'new',
         executablePath: process.env.NODE_ENV === 'production'
-          ? (process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium')
+          ? (process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser')
           : undefined, // Uses local Chrome in development
         args: [
           '--no-sandbox',
