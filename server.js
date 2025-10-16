@@ -18,6 +18,25 @@ const OrderProcessor = require('./services/order-processor');
 // Import utilities
 const logger = require('./utils/logger');
 
+// CRITICAL: Add error handlers to catch silent crashes
+process.on('uncaughtException', (err) => {
+  console.error('❌ UNCAUGHT EXCEPTION:', err);
+  console.error('❌ Stack:', err.stack);
+  console.error('❌ This will crash the process - Railway will restart');
+  // Don't exit immediately, let Railway handle the restart
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ UNHANDLED REJECTION:', reason);
+  console.error('❌ Promise:', promise);
+  console.error('❌ This might crash the process');
+});
+
+// Add keepalive ping to show if process is still alive
+setInterval(() => {
+  console.log('💓 Keepalive:', new Date().toISOString());
+}, 30000);
+
 const app = express();
 
 // Add request logging middleware at the TOP (before any routes)
@@ -312,6 +331,7 @@ async function startServer() {
     
     try {
       // Initialize services
+      console.log('🔧 About to initialize services...');
       await initializeServices();
       console.log('✅ Services initialized successfully');
     } catch (initError) {
@@ -322,30 +342,31 @@ async function startServer() {
     
     console.log('✅ Services initialized, starting HTTP server...');
     
-    // Add comprehensive error handling for silent crashes
-    process.on('uncaughtException', (err) => {
-      console.error('❌ Uncaught Exception:', err);
-      console.error('❌ Stack trace:', err.stack);
-      process.exit(1);
-    });
-
-    process.on('unhandledRejection', (err) => {
-      console.error('❌ Unhandled Rejection:', err);
-      console.error('❌ Stack trace:', err.stack);
-      process.exit(1);
-    });
-    
     console.log('🔍 DEBUG: About to call app.listen()...');
     
     try {
       const server = app.listen(PORT, '0.0.0.0', () => {
         console.log(`✅ SUCCESS: Server actually listening on ${PORT}`);
+        console.log('🔍 DEBUG: Server callback executed successfully');
         logger.info(`Server running on port ${PORT}`, {
           environment: process.env.NODE_ENV || 'production',
           port: PORT,
           nodeVersion: process.version,
           host: '0.0.0.0'
         });
+        
+        // Add post-startup logging to track if something crashes after this
+        setTimeout(() => {
+          console.log('🔍 DEBUG: 5 seconds after server start - still alive');
+        }, 5000);
+        
+        setTimeout(() => {
+          console.log('🔍 DEBUG: 10 seconds after server start - still alive');
+        }, 10000);
+        
+        setTimeout(() => {
+          console.log('🔍 DEBUG: 30 seconds after server start - still alive');
+        }, 30000);
       });
       
       server.on('error', (err) => {
