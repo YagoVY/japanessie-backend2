@@ -13,13 +13,6 @@ const printGenerator = new PrintGenerator();
 
 console.log('🚀 print-webhooks.js module loaded successfully');
 
-// Catch-all debug route to see if any requests are hitting the app
-router.all('*', (req, res, next) => {
-  console.log('🚨 ANY REQUEST HIT:', req.method, req.path);
-  console.log('🚨 Headers:', Object.keys(req.headers));
-  next();
-});
-
 // Add a simple test route to verify the router is working
 router.get('/test', (req, res) => {
   console.log('✅ TEST ROUTE HIT');
@@ -427,6 +420,13 @@ function extractDesignData(order) {
   const allData = extractAllDesignData(order);
   return allData.length > 0 ? allData[0] : null;
 }
+
+// Catch-all debug route at the VERY END (after all other routes)
+router.all('*', (req, res, next) => {
+  console.log('🚨 PRINT-WEBHOOKS CATCH-ALL HIT:', req.method, req.path);
+  console.log('🚨 Headers:', Object.keys(req.headers));
+  next();
+});
 
 module.exports = router;
 
