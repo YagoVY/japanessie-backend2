@@ -60,11 +60,35 @@ class CoordinateScalingGenerator {
       });
       
       // Launch headless browser
+      // Find Chromium executable path for Railway
+      const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
+      let executablePath;
+      
+      if (isRailway) {
+        const fs = require('fs');
+        const possiblePaths = [
+          '/usr/bin/chromium-browser',
+          '/usr/bin/chromium',
+          '/usr/bin/google-chrome',
+          '/usr/bin/google-chrome-stable'
+        ];
+        
+        for (const path of possiblePaths) {
+          if (fs.existsSync(path)) {
+            executablePath = path;
+            logger.info(`Found Chromium at: ${path}`);
+            break;
+          }
+        }
+        
+        if (!executablePath) {
+          throw new Error('Chromium executable not found. Checked paths: ' + possiblePaths.join(', '));
+        }
+      }
+
       browser = await puppeteer.launch({
         headless: 'new',
-        executablePath: process.env.NODE_ENV === 'production'
-          ? (process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser')
-          : undefined, // Uses local Chrome in development
+        executablePath: executablePath,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',

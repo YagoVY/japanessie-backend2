@@ -57,7 +57,7 @@ class PrintGenerator {
       
       // Find Chromium executable path for Railway
       let executablePath;
-      if (process.env.NODE_ENV === 'production' && isRailway) {
+      if (isRailway) {
         const fs = require('fs');
         const possiblePaths = [
           '/usr/bin/chromium-browser',
