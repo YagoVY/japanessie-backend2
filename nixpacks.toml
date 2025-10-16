@@ -19,3 +19,4 @@ cmd = "node server.js"
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
 PUPPETEER_EXECUTABLE_PATH = "/nix/var/nix/profiles/default/bin/chromium"
 NODE_ENV = "production"
+# Note: Do NOT set PORT here - Railway sets it automatically

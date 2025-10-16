@@ -19,12 +19,18 @@ const OrderProcessor = require('./services/order-processor');
 const logger = require('./utils/logger');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Railway requires using process.env.PORT with NO fallback
+const PORT = process.env.PORT;
+
+if (!PORT) {
+  console.error('❌ PORT environment variable not set! Railway requires this.');
+  process.exit(1);
+}
 
 // Railway expects the server to bind to the PORT environment variable
 console.log('🔧 Server configuration:', {
   PORT: PORT,
-  NODE_ENV: process.env.NODE_ENV,
+  NODE_ENV: process.env.NODE_ENV || 'production',
   RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
   RAILWAY_PROJECT_ID: process.env.RAILWAY_PROJECT_ID
 });
