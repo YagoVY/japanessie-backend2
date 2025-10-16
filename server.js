@@ -21,6 +21,14 @@ const logger = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Railway expects the server to bind to the PORT environment variable
+console.log('🔧 Server configuration:', {
+  PORT: PORT,
+  NODE_ENV: process.env.NODE_ENV,
+  RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
+  RAILWAY_PROJECT_ID: process.env.RAILWAY_PROJECT_ID
+});
+
 // Railway-specific configuration
 const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
 if (isRailway) {
@@ -218,16 +226,32 @@ async function initializeServices() {
 // Start server
 async function startServer() {
   try {
+    console.log('🚀 Starting server initialization...');
+    
     // Initialize services
     await initializeServices();
     
+    console.log('✅ Services initialized, starting HTTP server...');
+    
     // Start HTTP server
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       logger.info(`Server running on port ${PORT}`, {
         environment: process.env.NODE_ENV,
         port: PORT,
-        nodeVersion: process.version
+        nodeVersion: process.version,
+        host: '0.0.0.0'
       });
+    });
+
+    // Keep the process alive
+    process.on('SIGTERM', () => {
+      logger.info('Received SIGTERM, shutting down gracefully');
+      process.exit(0);
+    });
+
+    process.on('SIGINT', () => {
+      logger.info('Received SIGINT, shutting down gracefully');
+      process.exit(0);
     });
     
   } catch (error) {
