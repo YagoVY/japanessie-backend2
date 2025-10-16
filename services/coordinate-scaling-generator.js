@@ -67,6 +67,7 @@ class CoordinateScalingGenerator {
       if (isRailway) {
         const fs = require('fs');
         const possiblePaths = [
+          '/snap/bin/chromium',
           '/usr/bin/chromium-browser',
           '/usr/bin/chromium',
           '/usr/bin/google-chrome',
