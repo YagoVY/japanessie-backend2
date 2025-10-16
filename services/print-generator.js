@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const path = require('path');
 const fs = require('fs').promises;
 const S3StorageService = require('./s3-storage');
@@ -76,7 +76,10 @@ class PrintGenerator {
       }
       
       browser = await puppeteer.launch({
-        headless: true,
+        headless: 'new',
+        executablePath: process.env.NODE_ENV === 'production'
+          ? (process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium')
+          : undefined, // Uses local Chrome in development
         args: puppeteerArgs
       });
 

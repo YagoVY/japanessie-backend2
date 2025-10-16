@@ -1,0 +1,20 @@
+providers = ["node"]
+
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "chromium", "fontconfig"]
+
+[phases.install]
+cmds = [
+  "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true",
+  "npm ci --omit=dev --no-audit --no-fund --loglevel=error",
+  "mkdir -p /usr/share/fonts/truetype/custom",
+  "cp assets/fonts/*.ttf /usr/share/fonts/truetype/custom/ 2>/dev/null || true",
+  "fc-cache -fv"
+]
+
+[start]
+cmd = "node server.js"
+
+[variables]
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+PUPPETEER_EXECUTABLE_PATH = "/usr/bin/chromium"
