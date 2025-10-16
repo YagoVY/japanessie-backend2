@@ -16,6 +16,12 @@ router.all('*', (req, res, next) => {
   next();
 });
 
+// Add a simple test route to verify the router is working
+router.get('/test', (req, res) => {
+  console.log('✅ TEST ROUTE HIT');
+  res.json({ message: 'Print webhooks router is working!', timestamp: new Date().toISOString() });
+});
+
 // Load non-personalized products configuration
 let nonPersonalizedConfig = null;
 try {
