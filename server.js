@@ -137,7 +137,9 @@ app.get('/health', (req, res) => {
 // API routes
 console.log('🔧 Registering routes...');
 console.log('🔧 webhookRoutes type:', typeof webhookRoutes);
+console.log('🔧 webhookRoutes keys:', Object.keys(webhookRoutes || {}));
 console.log('🔧 printWebhookRoutes type:', typeof printWebhookRoutes);
+console.log('🔧 printWebhookRoutes keys:', Object.keys(printWebhookRoutes || {}));
 
 app.use('/webhooks', webhookRoutes);  // Legacy webhook routes
 console.log('✅ Legacy webhooks route registered');
@@ -153,6 +155,33 @@ app.get('/test-webhooks', (req, res) => {
       legacy: '/webhooks/shopify/orders/created',
       new: '/print-webhooks/shopify/orders/created'
     }
+  });
+});
+
+// Debug endpoint to see all registered routes
+app.get('/debug/routes', (req, res) => {
+  const routes = [];
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      routes.push({
+        path: middleware.route.path,
+        methods: Object.keys(middleware.route.methods)
+      });
+    } else if (middleware.name === 'router') {
+      middleware.handle.stack.forEach((handler) => {
+        if (handler.route) {
+          routes.push({
+            path: handler.route.path,
+            methods: Object.keys(handler.route.methods)
+          });
+        }
+      });
+    }
+  });
+  res.json({ 
+    message: 'All registered routes',
+    routes: routes,
+    totalRoutes: routes.length
   });
 });
 
