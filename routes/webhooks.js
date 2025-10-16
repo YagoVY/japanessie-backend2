@@ -8,6 +8,16 @@ const fs = require('fs');
 const router = express.Router();
 const orderProcessor = new OrderProcessor();
 
+// Test route to verify webhooks router is working
+router.get('/test', (req, res) => {
+  console.log('✅ LEGACY WEBHOOKS TEST ROUTE HIT');
+  res.json({ 
+    message: 'Legacy webhooks router is working!', 
+    timestamp: new Date().toISOString(),
+    path: '/webhooks/test'
+  });
+});
+
 // Load non-personalized products configuration
 let nonPersonalizedConfig = null;
 try {
@@ -514,5 +524,4 @@ function extractDesignData(order) {
   return allData.length > 0 ? allData[0] : null;
 }
 
-module.exports = router;
 module.exports = router;

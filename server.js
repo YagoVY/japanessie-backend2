@@ -125,6 +125,17 @@ console.log('✅ Legacy webhooks route registered');
 app.use('/print-webhooks', printWebhookRoutes);  // New print webhook routes
 console.log('✅ Print webhooks route registered');
 
+// Add a direct test to verify routes are accessible
+app.get('/test-webhooks', (req, res) => {
+  res.json({ 
+    message: 'Direct route test - server is working',
+    routes: {
+      legacy: '/webhooks/shopify/orders/created',
+      new: '/print-webhooks/shopify/orders/created'
+    }
+  });
+});
+
 app.use('/real-coordinates', realCoordinatesRoutes);  // Real coordinates from frontend
 app.use('/simple-print-upload', simplePrintUploadRoutes);  // Simple frontend print file upload
 app.use('/api/orders', orderRoutes);
