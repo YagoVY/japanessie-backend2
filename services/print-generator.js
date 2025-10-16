@@ -52,18 +52,32 @@ class PrintGenerator {
       const canvasSize = options.canvasSize || { width: 3600, height: 4800 };
       const isTestMode = options.canvasSize !== undefined;
       
-      // Launch headless browser
+      // Launch headless browser with Railway-optimized settings
+      const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
+      
+      const puppeteerArgs = [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ];
+      
+      // Railway-specific optimizations
+      if (isRailway) {
+        puppeteerArgs.push(
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--memory-pressure-off',
+          '--max_old_space_size=4096'
+        );
+      }
+      
       browser = await puppeteer.launch({
         headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--disable-gpu'
-        ]
+        args: puppeteerArgs
       });
 
       const page = await browser.newPage();

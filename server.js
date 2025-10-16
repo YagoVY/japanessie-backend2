@@ -21,11 +21,26 @@ const logger = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Railway-specific configuration
+const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
+if (isRailway) {
+  logger.info('Running on Railway platform', {
+    railwayEnvironment: process.env.RAILWAY_ENVIRONMENT,
+    railwayProjectId: process.env.RAILWAY_PROJECT_ID
+  });
+}
+
 // Trust proxy for proper IP address handling
 const isProd = process.env.NODE_ENV === 'production';
 
-// If Shopify/your proxy adds X-Forwarded-For, Express must trust the proxy hop.
-app.set('trust proxy', 1); // set to 1 even in dev since we're seeing XFF
+// Railway and proxy configuration
+if (isRailway) {
+  // Railway uses a proxy, so trust the first proxy hop
+  app.set('trust proxy', 1);
+} else {
+  // If Shopify/your proxy adds X-Forwarded-For, Express must trust the proxy hop.
+  app.set('trust proxy', 1); // set to 1 even in dev since we're seeing XFF
+}
 
 // Security middleware
 app.use(helmet({
@@ -34,16 +49,20 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const corsOrigins = process.env.ALLOWED_ORIGINS ? 
+  process.env.ALLOWED_ORIGINS.split(',') : 
+  (isRailway ? ['*'] : '*');
+
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  origin: corsOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Shopify-Hmac-Sha256', 'X-Shopify-Shop-Domain']
 }));
 
-// Rate limiting
+// Rate limiting - adjusted for Railway
 const limiter = rateLimit({
   windowMs: 60_000, // 1 minute
-  max: 300, // whatever fits your dev
+  max: isRailway ? 100 : 300, // Lower limit for Railway hobby plan
   message: {
     error: 'Too many requests from this IP, please try again later.'
   },
