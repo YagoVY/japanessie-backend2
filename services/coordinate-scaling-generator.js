@@ -61,18 +61,29 @@ class CoordinateScalingGenerator {
       
       // Get Puppeteer executable path based on environment
       const getPuppeteerPath = () => {
-        if (process.env.NODE_ENV === 'production') {
+        // For Railway/Production, ALWAYS return the Nix chromium path
+        if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID) {
           return '/nix/var/nix/profiles/default/bin/chromium';
         }
-        return undefined; // Local development - let Puppeteer use its own
+        
+        // For local development with puppeteer-core, we need to specify a path too
+        return null;
       };
       
       const executablePath = getPuppeteerPath();
+      
+      // IMPORTANT: Log the actual path value
       logger.info('Using Chromium path:', executablePath || 'default Puppeteer Chrome');
+      logger.info('Environment check:', {
+        NODE_ENV: process.env.NODE_ENV,
+        RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
+        RAILWAY_PROJECT_ID: process.env.RAILWAY_PROJECT_ID,
+        executablePath: executablePath
+      });
 
-      browser = await puppeteer.launch({
+      // Make sure executablePath is actually set
+      const launchOptions = {
         headless: 'new',
-        executablePath: executablePath,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -82,7 +93,15 @@ class CoordinateScalingGenerator {
           '--single-process',
           '--disable-web-security'
         ]
-      });
+      };
+      
+      // CRITICAL: Only add executablePath if it has a value
+      if (executablePath) {
+        launchOptions.executablePath = executablePath;
+      }
+      
+      logger.info('Puppeteer launch options:', launchOptions);
+      browser = await puppeteer.launch(launchOptions);
 
       const page = await browser.newPage();
       
