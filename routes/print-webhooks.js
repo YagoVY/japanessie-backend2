@@ -32,11 +32,32 @@ router.post('/shopify/orders/created', async (req, res) => {
       lineItemsCount: order.line_items?.length || 0
     });
     
+    // DEBUG: Log order details for troubleshooting
+    logger.info('Order details for debugging:', {
+      orderId: order.id,
+      lineItemsCount: order.line_items?.length || 0,
+      firstLineItem: order.line_items?.[0] ? {
+        id: order.line_items[0].id,
+        title: order.line_items[0].title,
+        variantId: order.line_items[0].variant_id,
+        sku: order.line_items[0].sku,
+        propertiesCount: order.line_items[0].properties?.length || 0,
+        properties: order.line_items[0].properties?.map(p => ({
+          name: p.name,
+          value: p.name === '_design_params' ? 'JSON_DATA' : p.value?.substring(0, 50)
+        }))
+      } : null
+    });
+
     // Extract design data from ALL line items
     const allDesignData = extractAllDesignData(order);
     
     if (!allDesignData || allDesignData.length === 0) {
-      logger.info('No design processing needed for order', { orderId: order.id });
+      logger.warn('No design processing needed for order - no design data found', { 
+        orderId: order.id,
+        lineItemsCount: order.line_items?.length || 0,
+        firstLineItemProperties: order.line_items?.[0]?.properties?.map(p => p.name) || []
+      });
       return res.status(200).json({ message: 'No design processing needed' });
     }
     
