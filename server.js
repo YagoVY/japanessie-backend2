@@ -203,16 +203,11 @@ async function initializeServices() {
     const orderProcessor = new OrderProcessor();
     logger.info('Order processor initialized');
     
-    // Test print generator
-    const PrintGenerator = require('./services/print-generator');
-    const printGenerator = new PrintGenerator();
-    const testResult = await printGenerator.testRenderer();
-    
-    if (testResult.success) {
-      logger.info('Print generator test passed');
-    } else {
-      logger.warn('Print generator test failed:', testResult.error);
-    }
+    // Test print generator (disabled for faster startup)
+    logger.info('Skipping print generator test for faster startup');
+    // const PrintGenerator = require('./services/print-generator');
+    // const printGenerator = new PrintGenerator();
+    // const testResult = await printGenerator.testRenderer();
     
   } catch (error) {
     logger.error('Service initialization failed:', error);
