@@ -9,6 +9,13 @@ const router = express.Router();
 const orderProcessor = new OrderProcessor();
 const printGenerator = new PrintGenerator();
 
+// Catch-all debug route to see if any requests are hitting the app
+router.all('*', (req, res, next) => {
+  console.log('🚨 ANY REQUEST HIT:', req.method, req.path);
+  console.log('🚨 Headers:', Object.keys(req.headers));
+  next();
+});
+
 // Load non-personalized products configuration
 let nonPersonalizedConfig = null;
 try {
@@ -22,6 +29,11 @@ try {
 // Shopify order created webhook - NEW SYSTEM with multi-item support
 router.post('/shopify/orders/created', async (req, res) => {
   try {
+    console.log('🔥🔥🔥 WEBHOOK HIT: Order created endpoint reached!');
+    console.log('🔥 Request headers:', req.headers);
+    console.log('🔥 Request body type:', typeof req.body);
+    console.log('🔥 Request body keys:', Object.keys(req.body || {}));
+    
     const order = req.body;
     const shopDomain = req.get('X-Shopify-Shop-Domain');
     
