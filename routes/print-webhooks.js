@@ -21,12 +21,17 @@ const webhookBodyParser = (req, res, next) => {
   next();
 };
 
+console.log('🚀 Loading print-webhooks.js module...');
+
 const router = express.Router();
 const orderProcessor = new OrderProcessor();
 const printGenerator = new PrintGenerator();
 
-// Test route to verify the router is working
+console.log('🚀 print-webhooks.js module loaded successfully');
+
+// Add a simple test route to verify the router is working
 router.get('/test', (req, res) => {
+  console.log('✅ TEST ROUTE HIT');
   res.json({ message: 'Print webhooks router is working!', timestamp: new Date().toISOString() });
 });
 
@@ -431,6 +436,13 @@ function extractDesignData(order) {
   const allData = extractAllDesignData(order);
   return allData.length > 0 ? allData[0] : null;
 }
+
+// Catch-all debug route at the VERY END (after all other routes)
+router.all('*', (req, res, next) => {
+  console.log('🚨 PRINT-WEBHOOKS CATCH-ALL HIT:', req.method, req.path);
+  console.log('🚨 Headers:', Object.keys(req.headers));
+  next();
+});
 
 module.exports = router;
 

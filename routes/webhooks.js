@@ -21,11 +21,16 @@ const webhookBodyParser = (req, res, next) => {
   next();
 };
 
+console.log('🚀 Loading webhooks.js module...');
+
 const router = express.Router();
 const orderProcessor = new OrderProcessor();
 
+console.log('🚀 webhooks.js module loaded successfully');
+
 // Test route to verify webhooks router is working
 router.get('/test', (req, res) => {
+  console.log('✅ LEGACY WEBHOOKS TEST ROUTE HIT');
   res.json({ 
     message: 'Legacy webhooks router is working!', 
     timestamp: new Date().toISOString(),
