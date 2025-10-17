@@ -101,7 +101,8 @@ build/
 # Font files (downloaded from Google Fonts)
 assets/fonts/*.woff2
 assets/fonts/*.woff
-assets/fonts/*.ttf
+# NOTE: TTF files are needed for Railway deployment (system fonts)
+# assets/fonts/*.ttf
 
 # Test files
 test-results/
