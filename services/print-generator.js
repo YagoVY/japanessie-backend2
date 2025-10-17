@@ -44,6 +44,11 @@ class PrintGenerator {
       htmlContent = htmlContent.replace('{{HuninnBase64}}', '');
       htmlContent = htmlContent.replace('{{RampartOneBase64}}', '');
       htmlContent = htmlContent.replace('{{CherryBombOneBase64}}', '');
+      htmlContent = htmlContent.replace('{{KiwiMaruBase64}}', '');
+      htmlContent = htmlContent.replace('{{KleeOneBase64}}', '');
+      htmlContent = htmlContent.replace('{{MochiyPopOneBase64}}', '');
+      htmlContent = htmlContent.replace('{{NotoSansJPBase64}}', '');
+      htmlContent = htmlContent.replace('{{YujiMaiBase64}}', '');
       
       logger.info('System fonts will be used from /usr/share/fonts/truetype/custom/');
     } else {
@@ -67,6 +72,11 @@ class PrintGenerator {
       htmlContent = htmlContent.replace('{{HuninnBase64}}', base64Fonts['Huninn'] || '');
       htmlContent = htmlContent.replace('{{RampartOneBase64}}', base64Fonts['Rampart One'] || '');
       htmlContent = htmlContent.replace('{{CherryBombOneBase64}}', base64Fonts['Cherry Bomb One'] || '');
+      htmlContent = htmlContent.replace('{{KiwiMaruBase64}}', base64Fonts['Kiwi Maru'] || '');
+      htmlContent = htmlContent.replace('{{KleeOneBase64}}', base64Fonts['Klee One'] || '');
+      htmlContent = htmlContent.replace('{{MochiyPopOneBase64}}', base64Fonts['Mochiy Pop One'] || '');
+      htmlContent = htmlContent.replace('{{NotoSansJPBase64}}', base64Fonts['Noto Sans JP'] || '');
+      htmlContent = htmlContent.replace('{{YujiMaiBase64}}', base64Fonts['Yuji Mai'] || '');
       
       // Log if any placeholders remain (indicating missing fonts)
       const remainingPlaceholders = htmlContent.match(/\{\{[^}]+\}\}/g);

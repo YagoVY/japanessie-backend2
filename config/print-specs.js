@@ -31,7 +31,12 @@ const PRINT_SPECS = {
       'Shippori Antique', 
       'Huninn',
       'Rampart One',
-      'Cherry Bomb One'
+      'Cherry Bomb One',
+      'Kiwi Maru',
+      'Klee One',
+      'Mochiy Pop One',
+      'Noto Sans JP',
+      'Yuji Mai'
     ],
     DEFAULT: 'Yuji Syuku',
     MIN_SIZE: 12,
