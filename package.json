@@ -4,8 +4,8 @@
   "description": "Node.js backend service for processing custom Japanese t-shirt designs from Shopify to Printful",
   "main": "server.js",
   "scripts": {
-    "start": "node test-server.js",
-    "start:main": "node server.js",
+    "start": "node server.js",
+    "start:test": "node test-server.js",
     "dev": "nodemon server.js",
     "test": "jest",
     "test:watch": "jest --watch",
