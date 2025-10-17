@@ -18,32 +18,18 @@ const OrderProcessor = require('./services/order-processor');
 // Import utilities
 const logger = require('./utils/logger');
 
-// CRITICAL: Add error handlers to catch silent crashes
+// Global error handlers for production stability
 process.on('uncaughtException', (err) => {
-  console.error('❌ UNCAUGHT EXCEPTION:', err);
-  console.error('❌ Stack:', err.stack);
-  console.error('❌ This will crash the process - Railway will restart');
-  // Don't exit immediately, let Railway handle the restart
+  logger.error('Uncaught exception:', err);
+  // Let the process crash and Railway will restart it
+  process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ UNHANDLED REJECTION:', reason);
-  console.error('❌ Promise:', promise);
-  console.error('❌ This might crash the process');
+  logger.error('Unhandled promise rejection:', { reason, promise });
 });
-
-// Add keepalive ping to show if process is still alive
-setInterval(() => {
-  console.log('💓 Keepalive:', new Date().toISOString());
-}, 30000);
 
 const app = express();
-
-// Add request logging middleware at the TOP (before any routes)
-app.use((req, res, next) => {
-  console.log(`📨 Incoming: ${req.method} ${req.path} from ${req.ip}`);
-  next();
-});
 
 // Railway requires using process.env.PORT with NO fallback
 const PORT = process.env.PORT;
@@ -161,19 +147,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes
-console.log('🔧 Registering routes...');
-console.log('🔧 webhookRoutes type:', typeof webhookRoutes);
-console.log('🔧 webhookRoutes keys:', Object.keys(webhookRoutes || {}));
-console.log('🔧 printWebhookRoutes type:', typeof printWebhookRoutes);
-console.log('🔧 printWebhookRoutes keys:', Object.keys(printWebhookRoutes || {}));
-
-// Mount webhooks WITHOUT raw body parser (will be applied per-route in routes/webhooks.js)
+// Mount webhook routes
 app.use('/webhooks', webhookRoutes);  // Legacy webhook routes
-console.log('✅ Legacy webhooks route registered');
-
 app.use('/print-webhooks', printWebhookRoutes);  // New print webhook routes
-console.log('✅ Print webhooks route registered');
 
 // Add a direct test to verify routes are accessible
 app.get('/test-webhooks', (req, res) => {
@@ -217,42 +193,6 @@ app.use('/real-coordinates', realCoordinatesRoutes);  // Real coordinates from f
 app.use('/simple-print-upload', simplePrintUploadRoutes);  // Simple frontend print file upload
 app.use('/api/orders', orderRoutes);
 app.use('/api/debug', debugRoutes);
-
-console.log('✅ All routes registered successfully');
-
-// COMPLETE EXPRESS ROUTE AUDIT
-console.log('\n🔍 ===== COMPLETE EXPRESS ROUTE AUDIT =====');
-console.log('Total middleware/routes in stack:', app._router.stack.length);
-
-app._router.stack.forEach((layer, index) => {
-  console.log(`\n[${index}] Layer:`, layer.name);
-  
-  if (layer.route) {
-    // Direct route
-    console.log('  Type: Direct Route');
-    console.log('  Path:', layer.route.path);
-    console.log('  Methods:', Object.keys(layer.route.methods));
-  } else if (layer.name === 'router') {
-    // Mounted router
-    console.log('  Type: Mounted Router');
-    console.log('  Regexp:', layer.regexp.toString());
-    console.log('  Has handle.stack:', !!layer.handle.stack);
-    
-    if (layer.handle.stack) {
-      console.log('  Sub-routes:');
-      layer.handle.stack.forEach((sublayer, subindex) => {
-        if (sublayer.route) {
-          console.log(`    [${subindex}] ${sublayer.route.path} - ${Object.keys(sublayer.route.methods)}`);
-        }
-      });
-    }
-  } else {
-    // Middleware
-    console.log('  Type: Middleware');
-  }
-});
-
-console.log('\n🔍 ===== END ROUTE AUDIT =====\n');
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -329,71 +269,41 @@ async function initializeServices() {
 // Start server
 async function startServer() {
   try {
-    console.log('🚀 Starting server initialization...');
+    // Initialize services
+    await initializeServices();
+    logger.info('Services initialized successfully');
     
-    try {
-      // Initialize services
-      console.log('🔧 About to initialize services...');
-      await initializeServices();
-      console.log('✅ Services initialized successfully');
-    } catch (initError) {
-      console.error('❌ Service initialization failed:', initError);
-      console.error('❌ Init error stack:', initError.stack);
-      throw initError;
-    }
-    
-    console.log('✅ Services initialized, starting HTTP server...');
-    
-    console.log('🔍 DEBUG: About to call app.listen()...');
-    
-    try {
-      const server = app.listen(PORT, '0.0.0.0', () => {
-        console.log(`✅ SUCCESS: Server actually listening on ${PORT}`);
-        console.log('🔍 DEBUG: Server callback executed successfully');
-        logger.info(`Server running on port ${PORT}`, {
-          environment: process.env.NODE_ENV || 'production',
-          port: PORT,
-          nodeVersion: process.version,
-          host: '0.0.0.0'
-        });
-        
-        // Add post-startup logging to track if something crashes after this
-        setTimeout(() => {
-          console.log('🔍 DEBUG: 5 seconds after server start - still alive');
-        }, 5000);
-        
-        setTimeout(() => {
-          console.log('🔍 DEBUG: 10 seconds after server start - still alive');
-        }, 10000);
-        
-        setTimeout(() => {
-          console.log('🔍 DEBUG: 30 seconds after server start - still alive');
-        }, 30000);
+    // Start HTTP server
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      logger.info(`Server running on port ${PORT}`, {
+        environment: process.env.NODE_ENV || 'production',
+        port: PORT,
+        nodeVersion: process.version,
+        host: '0.0.0.0'
       });
-      
-      server.on('error', (err) => {
-        console.error('❌ Server error:', err);
-        console.error('❌ Server error stack:', err.stack);
-        process.exit(1);
-      });
-      
-      console.log('🔍 DEBUG: app.listen() called, waiting for callback...');
-      
-    } catch (err) {
-      console.error('❌ Failed to start server:', err);
-      console.error('❌ Error stack:', err.stack);
+    });
+    
+    // Handle server errors
+    server.on('error', (err) => {
+      logger.error('Server error:', err);
       process.exit(1);
-    }
+    });
 
-    // Keep the process alive
+    // Graceful shutdown handlers
     process.on('SIGTERM', () => {
       logger.info('Received SIGTERM, shutting down gracefully');
-      process.exit(0);
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
     });
 
     process.on('SIGINT', () => {
       logger.info('Received SIGINT, shutting down gracefully');
-      process.exit(0);
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
     });
     
   } catch (error) {
@@ -401,17 +311,6 @@ async function startServer() {
     process.exit(1);
   }
 }
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception:', error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
 
 // Start the server
 startServer();
