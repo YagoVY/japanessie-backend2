@@ -32,11 +32,6 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ This might crash the process');
 });
 
-// Add keepalive ping to show if process is still alive
-setInterval(() => {
-  console.log('💓 Keepalive:', new Date().toISOString());
-}, 30000);
-
 const app = express();
 
 // Add request logging middleware at the TOP (before any routes)
