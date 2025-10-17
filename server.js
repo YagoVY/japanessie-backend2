@@ -120,10 +120,11 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // --- BEGIN: Webhook raw-body pipeline (Shopify) ---
+// Note: Raw body parser will be mounted with the webhook routes below
 const webhookRaw = express.raw({ type: 'application/json', limit: '2mb' });
 
-// Mount raw parser ONLY for /webhooks/**
-app.use('/webhooks', webhookRaw, (req, res, next) => {
+// Middleware to convert raw buffer to JSON object for webhook handlers
+const webhookBodyParser = (req, res, next) => {
   // If HMAC is disabled, we still need a JS object for our handlers
   if (Buffer.isBuffer(req.body)) {
     try {
@@ -133,7 +134,7 @@ app.use('/webhooks', webhookRaw, (req, res, next) => {
     }
   }
   next();
-});
+};
 // --- END: Webhook raw-body pipeline ---
 
 // Global parsers for non-webhook routes
@@ -167,7 +168,8 @@ console.log('🔧 webhookRoutes keys:', Object.keys(webhookRoutes || {}));
 console.log('🔧 printWebhookRoutes type:', typeof printWebhookRoutes);
 console.log('🔧 printWebhookRoutes keys:', Object.keys(printWebhookRoutes || {}));
 
-app.use('/webhooks', webhookRoutes);  // Legacy webhook routes
+// Mount webhooks with raw body parser and body parser middleware
+app.use('/webhooks', webhookRaw, webhookBodyParser, webhookRoutes);  // Legacy webhook routes
 console.log('✅ Legacy webhooks route registered');
 
 app.use('/print-webhooks', printWebhookRoutes);  // New print webhook routes
