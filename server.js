@@ -168,8 +168,8 @@ console.log('🔧 webhookRoutes keys:', Object.keys(webhookRoutes || {}));
 console.log('🔧 printWebhookRoutes type:', typeof printWebhookRoutes);
 console.log('🔧 printWebhookRoutes keys:', Object.keys(printWebhookRoutes || {}));
 
-// Mount webhooks with raw body parser and body parser middleware
-app.use('/webhooks', webhookRaw, webhookBodyParser, webhookRoutes);  // Legacy webhook routes
+// Mount webhooks WITHOUT raw body parser (will be applied per-route in routes/webhooks.js)
+app.use('/webhooks', webhookRoutes);  // Legacy webhook routes
 console.log('✅ Legacy webhooks route registered');
 
 app.use('/print-webhooks', printWebhookRoutes);  // New print webhook routes

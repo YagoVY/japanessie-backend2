@@ -5,6 +5,22 @@ const logger = require('../utils/logger');
 const path = require('path');
 const fs = require('fs');
 
+// Raw body parser for Shopify HMAC verification
+const webhookRaw = express.raw({ type: 'application/json', limit: '2mb' });
+
+// Middleware to convert raw buffer to JSON object for webhook handlers
+const webhookBodyParser = (req, res, next) => {
+  // If HMAC is disabled, we still need a JS object for our handlers
+  if (Buffer.isBuffer(req.body)) {
+    try {
+      req.body = JSON.parse(req.body.toString('utf8'));
+    } catch (e) {
+      return res.status(400).send('Invalid JSON body');
+    }
+  }
+  next();
+};
+
 console.log('🚀 Loading webhooks.js module...');
 
 const router = express.Router();
@@ -70,6 +86,8 @@ const verifyShopifyWebhook = (req, res, next) => {
 
 // Shopify order created webhook
 router.post('/shopify/orders/created', 
+  webhookRaw,
+  webhookBodyParser,
   verifyShopifyWebhook,
   async (req, res) => {
     try {
@@ -196,6 +214,8 @@ router.post('/shopify/orders/created',
 
 // Shopify order paid webhook
 router.post('/shopify/orders/paid', 
+  webhookRaw,
+  webhookBodyParser,
   verifyShopifyWebhook,
   async (req, res) => {
     try {
