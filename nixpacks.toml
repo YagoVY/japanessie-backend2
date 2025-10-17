@@ -8,8 +8,10 @@ cmds = [
   "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true",
   "npm ci --omit=dev --no-audit --no-fund --loglevel=error",
   "mkdir -p /usr/share/fonts/truetype/custom",
-  "cp assets/fonts/*.ttf /usr/share/fonts/truetype/custom/ 2>/dev/null || true",
+  "cp assets/fonts/*.ttf /usr/share/fonts/truetype/custom/",
+  "ls -lh /usr/share/fonts/truetype/custom/ || echo 'Font directory check failed'",
   "fc-cache -fv",
+  "fc-list | grep -i 'yuji\\|shippori\\|huninn\\|rampart\\|cherry' || echo 'Custom fonts not in cache'",
 ]
 
 [start]

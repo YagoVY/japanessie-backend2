@@ -29,32 +29,52 @@ class PrintGenerator {
   }
 
   async prepareHtmlWithFonts() {
-    const base64Fonts = await this.loadBase64Fonts();
     let htmlContent = await fs.readFile(this.printRendererPath, 'utf8');
     
-    // Log font availability for debugging
-    logger.info('Preparing HTML with fonts:', {
-      availableFonts: Object.keys(base64Fonts),
-      'Yuji Syuku': base64Fonts['Yuji Syuku'] ? `${(base64Fonts['Yuji Syuku'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING',
-      'Shippori Antique': base64Fonts['Shippori Antique'] ? `${(base64Fonts['Shippori Antique'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING',
-      'Huninn': base64Fonts['Huninn'] ? `${(base64Fonts['Huninn'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING',
-      'Rampart One': base64Fonts['Rampart One'] ? `${(base64Fonts['Rampart One'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING',
-      'Cherry Bomb One': base64Fonts['Cherry Bomb One'] ? `${(base64Fonts['Cherry Bomb One'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING'
-    });
+    // Check if we're in production (Railway) - use system fonts instead of Base64
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT;
     
-    // Replace font placeholders with actual base64 data
-    htmlContent = htmlContent.replace('{{YujiSyukuBase64}}', base64Fonts['Yuji Syuku'] || '');
-    htmlContent = htmlContent.replace('{{ShipporiAntiqueBase64}}', base64Fonts['Shippori Antique'] || '');
-    htmlContent = htmlContent.replace('{{HuninnBase64}}', base64Fonts['Huninn'] || '');
-    htmlContent = htmlContent.replace('{{RampartOneBase64}}', base64Fonts['Rampart One'] || '');
-    htmlContent = htmlContent.replace('{{CherryBombOneBase64}}', base64Fonts['Cherry Bomb One'] || '');
-    
-    // Log if any placeholders remain (indicating missing fonts)
-    const remainingPlaceholders = htmlContent.match(/\{\{[^}]+\}\}/g);
-    if (remainingPlaceholders) {
-      logger.warn('Font placeholders not replaced:', remainingPlaceholders);
+    if (isProduction) {
+      logger.info('Production environment detected - using system fonts instead of Base64');
+      
+      // Remove Base64 font-face declarations and just use system fonts
+      // The fonts are already installed at /usr/share/fonts/truetype/custom/ via nixpacks.toml
+      htmlContent = htmlContent.replace('{{YujiSyukuBase64}}', '');
+      htmlContent = htmlContent.replace('{{ShipporiAntiqueBase64}}', '');
+      htmlContent = htmlContent.replace('{{HuninnBase64}}', '');
+      htmlContent = htmlContent.replace('{{RampartOneBase64}}', '');
+      htmlContent = htmlContent.replace('{{CherryBombOneBase64}}', '');
+      
+      logger.info('System fonts will be used from /usr/share/fonts/truetype/custom/');
     } else {
-      logger.info('All font placeholders successfully replaced');
+      // Development: use Base64 fonts
+      logger.info('Development environment - loading Base64 fonts');
+      const base64Fonts = await this.loadBase64Fonts();
+      
+      // Log font availability for debugging
+      logger.info('Preparing HTML with Base64 fonts:', {
+        availableFonts: Object.keys(base64Fonts),
+        'Yuji Syuku': base64Fonts['Yuji Syuku'] ? `${(base64Fonts['Yuji Syuku'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING',
+        'Shippori Antique': base64Fonts['Shippori Antique'] ? `${(base64Fonts['Shippori Antique'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING',
+        'Huninn': base64Fonts['Huninn'] ? `${(base64Fonts['Huninn'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING',
+        'Rampart One': base64Fonts['Rampart One'] ? `${(base64Fonts['Rampart One'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING',
+        'Cherry Bomb One': base64Fonts['Cherry Bomb One'] ? `${(base64Fonts['Cherry Bomb One'].length / 1024 / 1024).toFixed(2)}MB` : 'MISSING'
+      });
+      
+      // Replace font placeholders with actual base64 data
+      htmlContent = htmlContent.replace('{{YujiSyukuBase64}}', base64Fonts['Yuji Syuku'] || '');
+      htmlContent = htmlContent.replace('{{ShipporiAntiqueBase64}}', base64Fonts['Shippori Antique'] || '');
+      htmlContent = htmlContent.replace('{{HuninnBase64}}', base64Fonts['Huninn'] || '');
+      htmlContent = htmlContent.replace('{{RampartOneBase64}}', base64Fonts['Rampart One'] || '');
+      htmlContent = htmlContent.replace('{{CherryBombOneBase64}}', base64Fonts['Cherry Bomb One'] || '');
+      
+      // Log if any placeholders remain (indicating missing fonts)
+      const remainingPlaceholders = htmlContent.match(/\{\{[^}]+\}\}/g);
+      if (remainingPlaceholders) {
+        logger.warn('Font placeholders not replaced:', remainingPlaceholders);
+      } else {
+        logger.info('All font placeholders successfully replaced');
+      }
     }
     
     return htmlContent;
