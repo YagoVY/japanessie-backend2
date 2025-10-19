@@ -25,6 +25,15 @@
     "ja-sake": 4016,
     "ja-kuruma": 4016,
     "ja-kabuki": 4016,
+    "ja-ramen": 4016,
+    "ja-mugiwara": 4016,
+    "ja-game": 4016,
+    "ja-samurai": 4016,
+    "ja-katana": 4016,
+    "ja-pixel": 4016,
+    "ja-sakana": 4016,
+    "ja-kaiju": 4016,
+    "ja-sakura": 4016,
     "wave-vertical": 4016,
     "wave-horizontal": 4016,
     "geometric-pattern": 4016,
@@ -81,6 +90,60 @@
       "defaultVariantId": 4016,
       "productType": "T-shirt",
       "description": "T-shirt with kabuki design"
+    },
+    "ja-ramen": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "description": "T-shirt with ramen design"
+    },
+    "ja-mugiwara": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "description": "T-shirt with straw hat design"
+    },
+    "ja-game": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "description": "T-shirt with game design"
+    },
+    "ja-samurai": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "description": "T-shirt with samurai design"
+    },
+    "ja-katana": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "description": "T-shirt with katana design"
+    },
+    "ja-pixel": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "description": "T-shirt with pixel art design"
+    },
+    "ja-sakana": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "description": "T-shirt with fish design"
+    },
+    "ja-kaiju": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "description": "T-shirt with kaiju monster design"
+    },
+    "ja-sakura": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "description": "T-shirt with cherry blossom design"
     },
     "wave-vertical": {
       "printfulProductId": 71,
