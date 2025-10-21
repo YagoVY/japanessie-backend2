@@ -918,15 +918,30 @@
                 // Apply stroke if provided (for PRESET_TEXT with stroke config)
                 let hasStroke = false;
                 let scaledStrokeWidth = 1;
+                
+                // Debug: Log what we received
+                console.log('[PrintRenderer] Stroke check:', {
+                    hasStrokeInParams: !!designParams.stroke,
+                    strokeEnabled: designParams.stroke?.enabled,
+                    fullStroke: designParams.stroke,
+                    hasLayout: !!layout,
+                    hasPrintArea: !!layout?.printArea
+                });
+                
                 if (designParams.stroke && designParams.stroke.enabled) {
                     hasStroke = true;
                     
                     // Calculate stroke width scale factor based on print resolution
                     // Stroke width from frontend is in preview scale (e.g., 8px for 600x800)
                     // Need to scale it for print resolution (3600x4800)
+                    
+                    // Use fallback if printArea is missing
+                    const printAreaWidth = layout.printArea?.width || 600;   // Default preview width
+                    const printAreaHeight = layout.printArea?.height || 800; // Default preview height
+                    
                     const strokeWidthScale = Math.max(
-                        this.printWidth / layout.printArea.width,
-                        this.printHeight / layout.printArea.height
+                        this.printWidth / printAreaWidth,
+                        this.printHeight / printAreaHeight
                     );
                     
                     scaledStrokeWidth = (designParams.stroke.width || 1) * strokeWidthScale;
@@ -936,14 +951,19 @@
                     this.ctx.lineJoin = 'round';
                     this.ctx.miterLimit = 2;
                     
-                    console.log('[PrintRenderer] Stroke enabled with scaling:', {
+                    console.log('[PrintRenderer] ✅ STROKE ENABLED with scaling:', {
                         color: designParams.stroke.color,
                         originalWidth: designParams.stroke.width,
+                        printAreaWidth,
+                        printAreaHeight,
+                        printWidth: this.printWidth,
+                        printHeight: this.printHeight,
                         strokeWidthScale: strokeWidthScale,
-                        scaledWidth: scaledStrokeWidth,
-                        printArea: { width: layout.printArea.width, height: layout.printArea.height },
-                        printCanvas: { width: this.printWidth, height: this.printHeight }
+                        scaledStrokeWidth: scaledStrokeWidth,
+                        contextLineWidth: this.ctx.lineWidth
                     });
+                } else {
+                    console.log('[PrintRenderer] ❌ STROKE NOT ENABLED - stroke will not be applied');
                 }
                 
                 // Apply shadow if provided (for PRESET_TEXT with shadow config)
