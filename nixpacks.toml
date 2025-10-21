@@ -11,7 +11,7 @@ cmds = [
   "cp assets/fonts/*.ttf /usr/share/fonts/truetype/custom/",
   "ls -lh /usr/share/fonts/truetype/custom/ || echo 'Font directory check failed'",
   "fc-cache -fv",
-  "fc-list | grep -i 'yuji\\|shippori\\|huninn\\|rampart\\|cherry' || echo 'Custom fonts not in cache'",
+  "fc-list | grep -i 'yuji\\|shippori\\|huninn\\|rampart\\|cherry\\|dela\\|dotgothic' || echo 'Custom fonts not in cache'",
 ]
 
 [start]

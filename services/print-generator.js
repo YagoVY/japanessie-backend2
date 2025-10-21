@@ -55,6 +55,7 @@ class PrintGenerator {
   mapFontName(fontName) {
     const fontMap = {
       'Dela Gothic One': 'Dela Gothic One',
+      'DotGothic16': 'DotGothic16',
       'Yuji Syuku': 'Yuji Syuku',
       'Shippori Antique': 'Shippori Antique',
       'Huninn': 'Huninn',
@@ -162,6 +163,8 @@ class PrintGenerator {
       htmlContent = htmlContent.replace('{{MochiyPopOneBase64}}', '');
       htmlContent = htmlContent.replace('{{NotoSansJPBase64}}', '');
       htmlContent = htmlContent.replace('{{YujiMaiBase64}}', '');
+      htmlContent = htmlContent.replace('{{DelaGothicOneBase64}}', '');
+      htmlContent = htmlContent.replace('{{DotGothic16Base64}}', '');
       
       logger.info('System fonts will be used from /usr/share/fonts/truetype/custom/');
     } else {
@@ -190,6 +193,8 @@ class PrintGenerator {
       htmlContent = htmlContent.replace('{{MochiyPopOneBase64}}', base64Fonts['Mochiy Pop One'] || '');
       htmlContent = htmlContent.replace('{{NotoSansJPBase64}}', base64Fonts['Noto Sans JP'] || '');
       htmlContent = htmlContent.replace('{{YujiMaiBase64}}', base64Fonts['Yuji Mai'] || '');
+      htmlContent = htmlContent.replace('{{DelaGothicOneBase64}}', base64Fonts['Dela Gothic One'] || '');
+      htmlContent = htmlContent.replace('{{DotGothic16Base64}}', base64Fonts['DotGothic16'] || '');
       
       // Log if any placeholders remain (indicating missing fonts)
       const remainingPlaceholders = htmlContent.match(/\{\{[^}]+\}\}/g);
