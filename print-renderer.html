@@ -1005,15 +1005,26 @@
                     
                     let printX, printY;
                     
-                    // Check if customPosition is provided (for PRESET_TEXT products)
-                    if (designParams.customPosition && i === 0) {
-                        // Use custom position directly (already in canvas coordinates)
-                        printX = designParams.customPosition.x;
-                        printY = designParams.customPosition.y;
+                    // Check if customPosition is provided (for PRESET_TEXT products WITHOUT textCoordinates)
+                    // NOTE: customPosition should ONLY be used when textCoordinates are NOT available
+                    // If textCoordinates exist, they already contain correct positioning for all characters
+                    if (designParams.customPosition && i === 0 && !position.frontendCoordinate && !designParams.textCoordinates) {
+                        // CRITICAL: customPosition comes from frontend preview canvas (600x800)
+                        // Scale it to print canvas coordinates (3600x4800)
+                        const printAreaScaleX = this.printWidth / layout.printArea.width;
+                        const printAreaScaleY = this.printHeight / layout.printArea.height;
+                        printX = designParams.customPosition.x * printAreaScaleX;
+                        printY = designParams.customPosition.y * printAreaScaleY;
                         
-                        console.log(`[PrintRenderer] Using custom position for PRESET_TEXT:`, {
-                            x: printX,
-                            y: printY
+                        console.log(`[PrintRenderer] Using custom position for PRESET_TEXT (SCALED):`, {
+                            originalX: designParams.customPosition.x,
+                            originalY: designParams.customPosition.y,
+                            printAreaWidth: layout.printArea.width,
+                            printAreaHeight: layout.printArea.height,
+                            printAreaScaleX,
+                            printAreaScaleY,
+                            scaledX: printX,
+                            scaledY: printY
                         });
                     } else if (position.frontendCoordinate) {
                         // CRITICAL FIX: Handle frontend coordinates differently
