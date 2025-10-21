@@ -546,7 +546,7 @@ class OrderProcessor {
     if (designData._design_params) {
       const frontendParams = designData._design_params;
       
-      return {
+      const extractedParams = {
         text: frontendParams.translatedText || frontendParams.originalText || '',
         fontFamily: frontendParams.fontStyle || 'Yuji Syuku',
         color: frontendParams.fontColor || '#000000',
@@ -571,6 +571,22 @@ class OrderProcessor {
         presetId: frontendParams.presetId || null,
         productType: frontendParams.productType || null
       };
+      
+      // CRITICAL: Include presetConfig if it exists (for PRESET_TEXT products with stroke/shadow)
+      if (frontendParams.presetConfig) {
+        extractedParams.presetConfig = frontendParams.presetConfig;
+        logger.info('✅ INCLUDED presetConfig in extracted params:', {
+          font: frontendParams.presetConfig.font,
+          fontSize: frontendParams.presetConfig.fontSize,
+          fontColor: frontendParams.presetConfig.fontColor,
+          hasStroke: frontendParams.presetConfig.stroke?.enabled,
+          hasShadow: frontendParams.presetConfig.shadow?.enabled,
+          hasPosition: !!frontendParams.presetConfig.position,
+          letterSpacing: frontendParams.presetConfig.letterSpacing
+        });
+      }
+      
+      return extractedParams;
     }
     
     // Fallback for legacy data structures
