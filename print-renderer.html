@@ -899,6 +899,36 @@
                 this.ctx.textAlign = 'left';
                 this.ctx.textBaseline = 'alphabetic';
                 
+                // Apply stroke if provided (for PRESET_TEXT with stroke config)
+                let hasStroke = false;
+                if (designParams.stroke && designParams.stroke.enabled) {
+                    hasStroke = true;
+                    this.ctx.strokeStyle = designParams.stroke.color;
+                    this.ctx.lineWidth = designParams.stroke.width || 1;
+                    this.ctx.lineJoin = 'round';
+                    this.ctx.miterLimit = 2;
+                    console.log('[PrintRenderer] Stroke enabled:', {
+                        color: designParams.stroke.color,
+                        width: designParams.stroke.width
+                    });
+                }
+                
+                // Apply shadow if provided (for PRESET_TEXT with shadow config)
+                let hasShadow = false;
+                if (designParams.shadow && designParams.shadow.enabled) {
+                    hasShadow = true;
+                    this.ctx.shadowColor = designParams.shadow.color;
+                    this.ctx.shadowBlur = designParams.shadow.blur || 0;
+                    this.ctx.shadowOffsetX = designParams.shadow.offsetX || 0;
+                    this.ctx.shadowOffsetY = designParams.shadow.offsetY || 0;
+                    console.log('[PrintRenderer] Shadow enabled:', {
+                        color: designParams.shadow.color,
+                        blur: designParams.shadow.blur,
+                        offsetX: designParams.shadow.offsetX,
+                        offsetY: designParams.shadow.offsetY
+                    });
+                }
+                
                 // Render text at print resolution
                 this.debugLog('Rendering text positions...');
                 for (let i = 0; i < layout.positions.length; i++) {
@@ -906,8 +936,18 @@
                     
                     let printX, printY;
                     
-                    // CRITICAL FIX: Handle frontend coordinates differently
-                    if (position.frontendCoordinate) {
+                    // Check if customPosition is provided (for PRESET_TEXT products)
+                    if (designParams.customPosition && i === 0) {
+                        // Use custom position directly (already in canvas coordinates)
+                        printX = designParams.customPosition.x;
+                        printY = designParams.customPosition.y;
+                        
+                        console.log(`[PrintRenderer] Using custom position for PRESET_TEXT:`, {
+                            x: printX,
+                            y: printY
+                        });
+                    } else if (position.frontendCoordinate) {
+                        // CRITICAL FIX: Handle frontend coordinates differently
                         // Frontend coordinates are already in print area coordinate system
                         // Scale them directly to print canvas coordinates
                         const printAreaScaleX = this.printWidth / layout.printArea.width;
@@ -1043,6 +1083,11 @@
                         
                         for (let j = 0; j < position.line.length; j++) {
                             const char = position.line[j];
+                            
+                            // Draw stroke first (if enabled), then fill on top
+                            if (hasStroke) {
+                                this.ctx.strokeText(char, currentX, printY);
+                            }
                             this.ctx.fillText(char, currentX, printY);
                             
                             const charWidth = this.ctx.measureText(char).width;
@@ -1053,6 +1098,11 @@
                         }
                     } else {
                         console.log(`  Rendering without letter spacing`);
+                        
+                        // Draw stroke first (if enabled), then fill on top
+                        if (hasStroke) {
+                            this.ctx.strokeText(position.line, printX, printY);
+                        }
                         this.ctx.fillText(position.line, printX, printY);
                     }
                 }

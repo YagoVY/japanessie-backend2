@@ -38,7 +38,8 @@
     "wave-horizontal": 4016,
     "geometric-pattern": 4016,
     "minimalist-lines": 4016,
-    "japanese-motif": 4016
+    "japanese-motif": 4016,
+    "ja-text-dela-1": 4016
   },
   
   "preset_product_variants": {
@@ -174,6 +175,13 @@
       "defaultVariantId": 4016,
       "productType": "T-shirt",
       "description": "T-shirt with Japanese motif"
+    },
+    "ja-text-dela-1": {
+      "printfulProductId": 71,
+      "defaultVariantId": 4016,
+      "productType": "T-shirt",
+      "presetType": "PRESET_TEXT",
+      "description": "Text-only preset T-shirt (no background image)"
     }
   },
   

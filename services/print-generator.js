@@ -11,6 +11,25 @@ class PrintGenerator {
     this.imageCompositor = new ImageCompositor();
     this.printRendererPath = path.join(__dirname, '../print-renderer.html');
     this.base64Fonts = null;
+    this.presetBackgrounds = this.loadPresetBackgrounds();
+  }
+
+  /**
+   * Load preset backgrounds configuration
+   * @returns {Object} - Preset backgrounds mapping
+   */
+  loadPresetBackgrounds() {
+    try {
+      const presetBackgroundsPath = path.join(__dirname, '../config/preset-backgrounds.json');
+      const config = require(presetBackgroundsPath);
+      logger.info('Loaded preset backgrounds config', { 
+        presetCount: Object.keys(config.preset_backgrounds || {}).length 
+      });
+      return config.preset_backgrounds || {};
+    } catch (error) {
+      logger.warn('Failed to load preset backgrounds config:', error.message);
+      return {};
+    }
   }
 
   async loadBase64Fonts() {
@@ -26,6 +45,100 @@ class PrintGenerator {
       logger.error('Failed to load base64 fonts:', error.message);
       return {};
     }
+  }
+
+  /**
+   * Map frontend font names to actual font family names
+   * @param {string} fontName - Frontend font name (e.g., "Dela Gothic One")
+   * @returns {string} - Actual font family name
+   */
+  mapFontName(fontName) {
+    const fontMap = {
+      'Dela Gothic One': 'Dela Gothic One',
+      'Yuji Syuku': 'Yuji Syuku',
+      'Shippori Antique': 'Shippori Antique',
+      'Huninn': 'Huninn',
+      'Rampart One': 'Rampart One',
+      'Cherry Bomb One': 'Cherry Bomb One',
+      'Kiwi Maru': 'Kiwi Maru',
+      'Klee One': 'Klee One',
+      'Mochiy Pop One': 'Mochiy Pop One',
+      'Noto Sans JP': 'Noto Sans JP',
+      'Yuji Mai': 'Yuji Mai'
+    };
+    
+    return fontMap[fontName] || fontName;
+  }
+
+  /**
+   * Apply presetConfig styling to design params (for PRESET_TEXT products)
+   * For PRESET_TEXT, presetConfig takes precedence over top-level params
+   * @param {Object} designParams - Original design parameters
+   * @returns {Object} - Modified design parameters with presetConfig applied
+   */
+  applyPresetConfig(designParams) {
+    // Check if this is a PRESET_TEXT product with presetConfig
+    if (!designParams.presetConfig) {
+      return designParams; // No presetConfig, return as-is
+    }
+
+    const isPresetText = this.isPresetTextProduct(designParams);
+    if (!isPresetText) {
+      logger.info('PresetConfig found but not PRESET_TEXT product, ignoring presetConfig');
+      return designParams; // Not PRESET_TEXT, don't apply presetConfig
+    }
+
+    logger.info('Applying presetConfig for PRESET_TEXT product', {
+      presetId: designParams.presetId,
+      presetConfig: designParams.presetConfig
+    });
+
+    const presetConfig = designParams.presetConfig;
+    
+    // Create modified params with presetConfig values overriding top-level params
+    const modifiedParams = {
+      ...designParams,
+      
+      // Override with presetConfig values
+      fontFamily: this.mapFontName(presetConfig.font || designParams.fontFamily),
+      fontSize: presetConfig.fontSize || designParams.fontSize,
+      color: presetConfig.fontColor || designParams.color,
+      orientation: presetConfig.orientation || designParams.orientation,
+      letterSpacing: presetConfig.letterSpacing !== undefined ? presetConfig.letterSpacing : designParams.letterSpacing,
+      
+      // Add stroke if enabled
+      stroke: presetConfig.stroke?.enabled ? {
+        enabled: true,
+        color: presetConfig.stroke.color,
+        width: presetConfig.stroke.width
+      } : null,
+      
+      // Add shadow if enabled
+      shadow: presetConfig.shadow?.enabled ? {
+        enabled: true,
+        color: presetConfig.shadow.color,
+        blur: presetConfig.shadow.blur,
+        offsetX: presetConfig.shadow.offsetX,
+        offsetY: presetConfig.shadow.offsetY
+      } : null,
+      
+      // Add custom position if provided
+      customPosition: presetConfig.position ? {
+        x: presetConfig.position.x,
+        y: presetConfig.position.y
+      } : null
+    };
+
+    logger.info('PresetConfig applied successfully', {
+      font: modifiedParams.fontFamily,
+      fontSize: modifiedParams.fontSize,
+      color: modifiedParams.color,
+      hasStroke: !!modifiedParams.stroke,
+      hasShadow: !!modifiedParams.shadow,
+      hasCustomPosition: !!modifiedParams.customPosition
+    });
+
+    return modifiedParams;
   }
 
   async prepareHtmlWithFonts() {
@@ -95,6 +208,13 @@ class PrintGenerator {
     
     try {
       logger.info('Starting print generation with Puppeteer', { designParams, options });
+      
+      // For PRESET_TEXT products with presetConfig, use preset styling instead of top-level params
+      const actualParams = this.applyPresetConfig(designParams);
+      logger.info('Applied preset config (if present)', { 
+        hadPresetConfig: !!designParams.presetConfig,
+        isPresetText: this.isPresetTextProduct(designParams)
+      });
       
       // Determine canvas size from options
       const canvasSize = options.canvasSize || { width: 3600, height: 4800 };
@@ -195,7 +315,7 @@ class PrintGenerator {
       // Execute the rendering function
       const result = await page.evaluate(async (params, canvasSize, isTestMode, useFrontendLogic) => {
         return await window.renderPrintDesign(params, canvasSize, isTestMode, useFrontendLogic);
-      }, designParams, canvasSize, isTestMode, options.useFrontendLogic);
+      }, actualParams, canvasSize, isTestMode, options.useFrontendLogic);
 
       if (!result.success) {
         throw new Error(`Rendering failed: ${result.error}`);
@@ -240,7 +360,9 @@ class PrintGenerator {
         dimensions: result.dimensions,
         metadata: {
           generatedAt: new Date().toISOString(),
-          designParams,
+          designParams: actualParams,
+          originalDesignParams: designParams,
+          hadPresetConfig: !!designParams.presetConfig,
           rendererVersion: '1.0.0'
         }
       };
@@ -393,15 +515,72 @@ class PrintGenerator {
   }
 
   /**
-   * Check if design parameters indicate a preset product
+   * Check if design parameters indicate a preset product (ANY type)
    * @param {Object} designParams - Design parameters
-   * @returns {boolean} - True if preset product
+   * @returns {boolean} - True if preset product (either PRESET_IMAGE or PRESET_TEXT)
    */
   isPresetProduct(designParams) {
-    // Must have both productType indicating preset AND a valid presetId
-    const isPresetType = designParams.productType === 'PRESET_IMAGE' || designParams.productType === 'preset_image';
+    // Frontend sends productType: "preset_image" for ALL presets
+    const isPresetType = designParams.productType === 'PRESET_IMAGE' || 
+                         designParams.productType === 'preset_image' ||
+                         designParams.productType === 'PRESET_TEXT' ||
+                         designParams.productType === 'preset_text';
     const presetId = this.extractPresetId(designParams);
     return isPresetType && presetId !== null && presetId !== undefined;
+  }
+
+  /**
+   * Check if a preset has a background image
+   * @param {string} presetId - Preset identifier
+   * @returns {boolean} - True if preset has background image in config
+   */
+  hasPresetBackground(presetId) {
+    if (!presetId) return false;
+    const hasBackground = this.presetBackgrounds && this.presetBackgrounds[presetId];
+    logger.info(`Checking background for preset ${presetId}:`, hasBackground ? 'YES' : 'NO');
+    return !!hasBackground;
+  }
+
+  /**
+   * Determine the actual preset type based on background availability
+   * Frontend sends "preset_image" for all presets, but backend needs to differentiate
+   * @param {Object} designParams - Design parameters
+   * @returns {string} - 'PRESET_IMAGE', 'PRESET_TEXT', or 'CUSTOM'
+   */
+  determinePresetType(designParams) {
+    // Check if this is a preset product at all
+    if (!this.isPresetProduct(designParams)) {
+      return 'CUSTOM';
+    }
+
+    const presetId = this.extractPresetId(designParams);
+    
+    // Check if preset has background image in config
+    if (this.hasPresetBackground(presetId)) {
+      logger.info(`Preset ${presetId} classified as PRESET_IMAGE (has background)`);
+      return 'PRESET_IMAGE';
+    } else {
+      logger.info(`Preset ${presetId} classified as PRESET_TEXT (no background)`);
+      return 'PRESET_TEXT';
+    }
+  }
+
+  /**
+   * Check if design parameters indicate a text-only preset
+   * @param {Object} designParams - Design parameters
+   * @returns {boolean} - True if preset text product
+   */
+  isPresetTextProduct(designParams) {
+    return this.determinePresetType(designParams) === 'PRESET_TEXT';
+  }
+
+  /**
+   * Check if design parameters indicate an image+text preset
+   * @param {Object} designParams - Design parameters
+   * @returns {boolean} - True if preset image product
+   */
+  isPresetImageProduct(designParams) {
+    return this.determinePresetType(designParams) === 'PRESET_IMAGE';
   }
 
   async generatePreview(designParams, options = {}) {

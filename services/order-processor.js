@@ -182,27 +182,40 @@ class OrderProcessor {
         };
       }
       
-      // 2. Generate high-resolution print file using Puppeteer (for custom products)
+      // 2. Generate high-resolution print file using Puppeteer
       logger.info(`Generating print file for order ${orderId}`);
       
-      // Check if this is a preset product with customization
-      if (this.printGenerator.isPresetProduct(designParams)) {
-        logger.info(`Processing preset product for order ${orderId}`);
+      // Determine product type intelligently based on preset background availability
+      const productType = this.printGenerator.determinePresetType(designParams);
+      logger.info(`Product type determined: ${productType}`, {
+        presetId: designParams.presetId,
+        frontendProductType: designParams.productType
+      });
+      
+      if (productType === 'PRESET_TEXT') {
+        // Text-only preset: Generate text PNG without background composition
+        // Uses CUSTOM text generation but will use preset variant mapping
+        logger.info(`Processing PRESET_TEXT product for order ${orderId}`);
+        printResult = await this.printGenerator.generatePrintFile(designParams, { orderId });
         
-        // Get preset ID from design parameters for background fetch
+      } else if (productType === 'PRESET_IMAGE') {
+        // Image+text preset: Generate text PNG and composite with background
+        logger.info(`Processing PRESET_IMAGE product for order ${orderId}`);
+        
         const presetId = designParams.presetId;
-        
         if (!presetId) {
-          logger.warn(`No preset ID found for preset product, falling back to text-only`);
+          logger.warn(`No preset ID found for PRESET_IMAGE product, falling back to text-only`);
           printResult = await this.printGenerator.generatePrintFile(designParams, { orderId });
         } else {
-          logger.info(`Using preset ID ${presetId} for background fetch`);
+          logger.info(`Using preset ID ${presetId} for background fetch and composition`);
           printResult = await this.printGenerator.generatePresetPrintFile(designParams, { 
             orderId
           });
         }
+        
       } else {
-        logger.info(`Processing custom product for order ${orderId}`);
+        // CUSTOM product: Text-only with no preset variant mapping
+        logger.info(`Processing CUSTOM product for order ${orderId}`);
         printResult = await this.printGenerator.generatePrintFile(designParams, { orderId });
       }
       
@@ -639,6 +652,21 @@ class OrderProcessor {
         console.log('✅ INCLUDED presetId in renderer params:', frontendParams.presetId);
       }
       
+      // NEW: Include presetConfig if it exists (for PRESET_TEXT products)
+      if (frontendParams.presetConfig) {
+        rendererParams.presetConfig = frontendParams.presetConfig;
+        console.log('✅ INCLUDED presetConfig in renderer params:', {
+          font: frontendParams.presetConfig.font,
+          fontSize: frontendParams.presetConfig.fontSize,
+          fontColor: frontendParams.presetConfig.fontColor,
+          orientation: frontendParams.presetConfig.orientation,
+          hasStroke: frontendParams.presetConfig.stroke?.enabled,
+          hasShadow: frontendParams.presetConfig.shadow?.enabled,
+          hasPosition: !!frontendParams.presetConfig.position,
+          letterSpacing: frontendParams.presetConfig.letterSpacing
+        });
+      }
+      
       // NEW: Log letterSpacing if present
       if (frontendParams.letterSpacing !== undefined && frontendParams.letterSpacing !== null) {
         console.log('✅ INCLUDED letterSpacing in renderer params:', frontendParams.letterSpacing);
@@ -659,9 +687,12 @@ class OrderProcessor {
       }
       
       // NEW: Check if this is a preset product based on frontend data
-      if (frontendParams.productType === 'preset_image' && frontendParams.presetId) {
+      if ((frontendParams.productType === 'preset_image' || frontendParams.productType === 'PRESET_IMAGE') && frontendParams.presetId) {
+        // Determine actual preset type (PRESET_TEXT vs PRESET_IMAGE) based on background availability
+        const actualType = this.printGenerator.determinePresetType(rendererParams);
         console.log('🎨 Detected preset product from frontend:', {
-          productType: frontendParams.productType,
+          frontendProductType: frontendParams.productType,
+          actualProductType: actualType,
           presetId: frontendParams.presetId
         });
       }
@@ -763,28 +794,36 @@ class OrderProcessor {
     }
     
     // PRIORITY 2: Try preset fallback (for preset products when exact variant not mapped)
-    if (designParams && designParams.productType === 'preset_image' && designParams.presetId) {
-      const fallbackVariant = this.presetMapping.presetFallbacks[designParams.presetId];
+    // This applies to BOTH PRESET_TEXT and PRESET_IMAGE types
+    if (designParams && designParams.presetId) {
+      // Check if this is a preset product (either PRESET_TEXT or PRESET_IMAGE)
+      const productType = this.printGenerator.determinePresetType(designParams);
+      const isPresetProduct = productType === 'PRESET_TEXT' || productType === 'PRESET_IMAGE';
       
-      if (fallbackVariant) {
-        variantId = fallbackVariant;
-        selectionMethod = 'preset_fallback';
+      if (isPresetProduct) {
+        const fallbackVariant = this.presetMapping.presetFallbacks[designParams.presetId];
         
-        logger.info(`PRIORITY 2: Using preset fallback for ${designParams.presetId}`, {
-          presetId: designParams.presetId,
-          printfulVariantId: variantId,
-          reason: 'Exact Shopify variant not in mapping'
-        });
-        
-        return {
-          variantId,
-          quantity,
-          shopifyVariantId,
-          selectionMethod,
-          presetId: designParams.presetId
-        };
-      } else {
-        logger.warn(`Preset ID ${designParams.presetId} not found in fallback mapping`);
+        if (fallbackVariant) {
+          variantId = fallbackVariant;
+          selectionMethod = 'preset_fallback';
+          
+          logger.info(`PRIORITY 2: Using preset fallback for ${designParams.presetId}`, {
+            presetId: designParams.presetId,
+            productType: productType,
+            printfulVariantId: variantId,
+            reason: 'Exact Shopify variant not in mapping'
+          });
+          
+          return {
+            variantId,
+            quantity,
+            shopifyVariantId,
+            selectionMethod,
+            presetId: designParams.presetId
+          };
+        } else {
+          logger.warn(`Preset ID ${designParams.presetId} not found in fallback mapping`);
+        }
       }
     }
     
