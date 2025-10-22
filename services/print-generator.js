@@ -137,39 +137,7 @@ class PrintGenerator {
       } : null
     };
 
-    // SPECIAL CASE: Adjust Y position for ja-noto-2 preset
-    if (designParams.presetId === 'ja-noto-2') {
-      // For preset_image products, adjust textCoordinates Y positions
-      if (modifiedParams.textCoordinates && modifiedParams.textCoordinates.coordinates) {
-        const adjustment = 30; // Move text down by 30px
-        modifiedParams.textCoordinates.coordinates = modifiedParams.textCoordinates.coordinates.map((coord, index) => {
-          const originalY = coord.y;
-          return {
-            ...coord,
-            y: originalY + adjustment
-          };
-        });
-        logger.info('🔧 Special adjustment for ja-noto-2: textCoordinates Y positions shifted', {
-          presetId: 'ja-noto-2',
-          coordinatesCount: modifiedParams.textCoordinates.coordinates.length,
-          adjustment: `+${adjustment}px`,
-          firstCharOriginalY: designParams.textCoordinates?.coordinates?.[0]?.y,
-          firstCharAdjustedY: modifiedParams.textCoordinates.coordinates[0]?.y
-        });
-      }
-      
-      // Also adjust customPosition if it exists (for PRESET_TEXT)
-      if (modifiedParams.customPosition) {
-        const originalY = modifiedParams.customPosition.y;
-        modifiedParams.customPosition.y = originalY + 30;
-        logger.info('🔧 Special adjustment for ja-noto-2: customPosition Y shifted', {
-          presetId: 'ja-noto-2',
-          originalY: originalY,
-          adjustedY: modifiedParams.customPosition.y,
-          adjustment: '+30px'
-        });
-      }
-    }
+    // Note: ja-noto-2 adjustment now happens in generatePrintFile before this function is called
 
     logger.info('PresetConfig applied successfully', {
       font: modifiedParams.fontFamily,
@@ -257,6 +225,22 @@ class PrintGenerator {
     
     try {
       logger.info('Starting print generation with Puppeteer', { designParams, options });
+      
+      // SPECIAL CASE: Adjust Y position for ja-noto-2 preset BEFORE applying presetConfig
+      if (designParams.presetId === 'ja-noto-2' && designParams.textCoordinates && designParams.textCoordinates.coordinates) {
+        const adjustment = 30; // Move text down by 30px
+        logger.info('🔧 Adjusting ja-noto-2 textCoordinates Y positions BEFORE rendering', {
+          originalFirstY: designParams.textCoordinates.coordinates[0]?.y,
+          adjustment: `+${adjustment}px`
+        });
+        designParams.textCoordinates.coordinates = designParams.textCoordinates.coordinates.map(coord => ({
+          ...coord,
+          y: coord.y + adjustment
+        }));
+        logger.info('🔧 ja-noto-2 adjustment applied:', {
+          newFirstY: designParams.textCoordinates.coordinates[0]?.y
+        });
+      }
       
       // For PRESET_TEXT products with presetConfig, use preset styling instead of top-level params
       const actualParams = this.applyPresetConfig(designParams);
