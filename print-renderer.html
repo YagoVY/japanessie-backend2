@@ -923,6 +923,19 @@
                 this.ctx.textAlign = 'left';
                 this.ctx.textBaseline = 'alphabetic';
                 
+                // Check for colorPattern configuration (multi-color text support)
+                const hasColorPattern = designParams.colorPattern && 
+                                      designParams.colorPattern.colors && 
+                                      designParams.colorPattern.colors.length > 0;
+                
+                if (hasColorPattern) {
+                    console.log('[PrintRenderer] 🎨 COLOR PATTERN DETECTED:', {
+                        colors: designParams.colorPattern.colors,
+                        repeat: designParams.colorPattern.repeat,
+                        fallbackColor: color
+                    });
+                }
+                
                 // Apply stroke if provided (for PRESET_TEXT with stroke config)
                 let hasStroke = false;
                 let scaledStrokeWidth = 1;
@@ -1172,6 +1185,21 @@
                         for (let j = 0; j < position.line.length; j++) {
                             const char = position.line[j];
                             
+                            // Apply color from colorPattern if available
+                            if (hasColorPattern) {
+                                const colorIndex = designParams.colorPattern.repeat 
+                                    ? j % designParams.colorPattern.colors.length 
+                                    : Math.min(j, designParams.colorPattern.colors.length - 1);
+                                
+                                const charColor = j < designParams.colorPattern.colors.length || designParams.colorPattern.repeat
+                                    ? designParams.colorPattern.colors[colorIndex]
+                                    : color; // fallback to fontColor
+                                
+                                this.ctx.fillStyle = charColor;
+                                
+                                console.log(`    🎨 Char "${char}" [${j}]: color=${charColor} (pattern index ${colorIndex})`);
+                            }
+                            
                             // Draw stroke first (if enabled), then fill on top
                             if (hasStroke) {
                                 this.ctx.strokeText(char, currentX, printY);
@@ -1187,11 +1215,44 @@
                     } else {
                         console.log(`  Rendering without letter spacing`);
                         
-                        // Draw stroke first (if enabled), then fill on top
-                        if (hasStroke) {
-                            this.ctx.strokeText(position.line, printX, printY);
+                        // Check if we need to render character by character for colorPattern
+                        if (hasColorPattern && position.line.length > 1) {
+                            // Render character by character with different colors
+                            let currentX = printX;
+                            console.log(`  🎨 Rendering multi-color text without letter spacing`);
+                            
+                            for (let j = 0; j < position.line.length; j++) {
+                                const char = position.line[j];
+                                
+                                // Determine color for this character
+                                const colorIndex = designParams.colorPattern.repeat 
+                                    ? j % designParams.colorPattern.colors.length 
+                                    : Math.min(j, designParams.colorPattern.colors.length - 1);
+                                
+                                const charColor = j < designParams.colorPattern.colors.length || designParams.colorPattern.repeat
+                                    ? designParams.colorPattern.colors[colorIndex]
+                                    : color; // fallback to fontColor
+                                
+                                this.ctx.fillStyle = charColor;
+                                
+                                console.log(`    🎨 Char "${char}" [${j}]: color=${charColor} (pattern index ${colorIndex})`);
+                                
+                                // Draw stroke first (if enabled), then fill on top
+                                if (hasStroke) {
+                                    this.ctx.strokeText(char, currentX, printY);
+                                }
+                                this.ctx.fillText(char, currentX, printY);
+                                
+                                const charWidth = this.ctx.measureText(char).width;
+                                currentX += charWidth;
+                            }
+                        } else {
+                            // Draw stroke first (if enabled), then fill on top
+                            if (hasStroke) {
+                                this.ctx.strokeText(position.line, printX, printY);
+                            }
+                            this.ctx.fillText(position.line, printX, printY);
                         }
-                        this.ctx.fillText(position.line, printX, printY);
                     }
                 }
                 

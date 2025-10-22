@@ -128,6 +128,12 @@ class PrintGenerator {
       customPosition: presetConfig.position ? {
         x: presetConfig.position.x,
         y: presetConfig.position.y
+      } : null,
+      
+      // Add colorPattern if provided (multi-color text support)
+      colorPattern: presetConfig.colorPattern ? {
+        colors: presetConfig.colorPattern.colors,
+        repeat: presetConfig.colorPattern.repeat !== undefined ? presetConfig.colorPattern.repeat : true
       } : null
     };
 
@@ -137,7 +143,8 @@ class PrintGenerator {
       color: modifiedParams.color,
       hasStroke: !!modifiedParams.stroke,
       hasShadow: !!modifiedParams.shadow,
-      hasCustomPosition: !!modifiedParams.customPosition
+      hasCustomPosition: !!modifiedParams.customPosition,
+      hasColorPattern: !!modifiedParams.colorPattern
     });
 
     return modifiedParams;
