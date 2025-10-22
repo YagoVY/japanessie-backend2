@@ -582,7 +582,9 @@ class OrderProcessor {
           hasStroke: frontendParams.presetConfig.stroke?.enabled,
           hasShadow: frontendParams.presetConfig.shadow?.enabled,
           hasPosition: !!frontendParams.presetConfig.position,
-          letterSpacing: frontendParams.presetConfig.letterSpacing
+          letterSpacing: frontendParams.presetConfig.letterSpacing,
+          hasColorPattern: !!frontendParams.presetConfig.colorPattern,
+          colorPatternColors: frontendParams.presetConfig.colorPattern?.colors?.length || 0
         });
       }
       
@@ -679,7 +681,10 @@ class OrderProcessor {
           hasStroke: frontendParams.presetConfig.stroke?.enabled,
           hasShadow: frontendParams.presetConfig.shadow?.enabled,
           hasPosition: !!frontendParams.presetConfig.position,
-          letterSpacing: frontendParams.presetConfig.letterSpacing
+          letterSpacing: frontendParams.presetConfig.letterSpacing,
+          hasColorPattern: !!frontendParams.presetConfig.colorPattern,
+          colorPatternColors: frontendParams.presetConfig.colorPattern?.colors?.length || 0,
+          colorPatternRepeat: frontendParams.presetConfig.colorPattern?.repeat
         });
       }
       

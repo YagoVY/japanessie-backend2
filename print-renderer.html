@@ -1021,6 +1021,10 @@
                 
                 // Render text at print resolution
                 this.debugLog('Rendering text positions...');
+                
+                // Track global character index for colorPattern (across all positions)
+                let globalCharIndex = 0;
+                
                 for (let i = 0; i < layout.positions.length; i++) {
                     const position = layout.positions[i];
                     
@@ -1185,19 +1189,19 @@
                         for (let j = 0; j < position.line.length; j++) {
                             const char = position.line[j];
                             
-                            // Apply color from colorPattern if available
+                            // Apply color from colorPattern if available (use globalCharIndex)
                             if (hasColorPattern) {
                                 const colorIndex = designParams.colorPattern.repeat 
-                                    ? j % designParams.colorPattern.colors.length 
-                                    : Math.min(j, designParams.colorPattern.colors.length - 1);
+                                    ? globalCharIndex % designParams.colorPattern.colors.length 
+                                    : Math.min(globalCharIndex, designParams.colorPattern.colors.length - 1);
                                 
-                                const charColor = j < designParams.colorPattern.colors.length || designParams.colorPattern.repeat
+                                const charColor = globalCharIndex < designParams.colorPattern.colors.length || designParams.colorPattern.repeat
                                     ? designParams.colorPattern.colors[colorIndex]
                                     : color; // fallback to fontColor
                                 
                                 this.ctx.fillStyle = charColor;
                                 
-                                console.log(`    🎨 Char "${char}" [${j}]: color=${charColor} (pattern index ${colorIndex})`);
+                                console.log(`    🎨 Char "${char}" [global:${globalCharIndex}, local:${j}]: color=${charColor} (pattern index ${colorIndex})`);
                             }
                             
                             // Draw stroke first (if enabled), then fill on top
@@ -1210,6 +1214,7 @@
                             const extraSpacing = printFontSize * 0.12;
                             currentX += charWidth - reduction + extraSpacing;
                             
+                            globalCharIndex++; // Increment for next character
                             console.log(`    Char "${char}": width=${charWidth}, x=${currentX - charWidth + reduction - extraSpacing}`);
                         }
                     } else {
@@ -1217,25 +1222,25 @@
                         
                         // Check if we need to render character by character for colorPattern
                         if (hasColorPattern && position.line.length > 1) {
-                            // Render character by character with different colors
+                            // Multi-character position with colorPattern
                             let currentX = printX;
-                            console.log(`  🎨 Rendering multi-color text without letter spacing`);
+                            console.log(`  🎨 Rendering multi-color text without letter spacing (multi-char position)`);
                             
                             for (let j = 0; j < position.line.length; j++) {
                                 const char = position.line[j];
                                 
-                                // Determine color for this character
+                                // Determine color for this character (use globalCharIndex)
                                 const colorIndex = designParams.colorPattern.repeat 
-                                    ? j % designParams.colorPattern.colors.length 
-                                    : Math.min(j, designParams.colorPattern.colors.length - 1);
+                                    ? globalCharIndex % designParams.colorPattern.colors.length 
+                                    : Math.min(globalCharIndex, designParams.colorPattern.colors.length - 1);
                                 
-                                const charColor = j < designParams.colorPattern.colors.length || designParams.colorPattern.repeat
+                                const charColor = globalCharIndex < designParams.colorPattern.colors.length || designParams.colorPattern.repeat
                                     ? designParams.colorPattern.colors[colorIndex]
                                     : color; // fallback to fontColor
                                 
                                 this.ctx.fillStyle = charColor;
                                 
-                                console.log(`    🎨 Char "${char}" [${j}]: color=${charColor} (pattern index ${colorIndex})`);
+                                console.log(`    🎨 Char "${char}" [global:${globalCharIndex}, local:${j}]: color=${charColor} (pattern index ${colorIndex})`);
                                 
                                 // Draw stroke first (if enabled), then fill on top
                                 if (hasStroke) {
@@ -1245,13 +1250,41 @@
                                 
                                 const charWidth = this.ctx.measureText(char).width;
                                 currentX += charWidth;
+                                globalCharIndex++; // Increment for next character
                             }
-                        } else {
+                        } else if (hasColorPattern && position.line.length === 1) {
+                            // Single-character position with colorPattern (common with textCoordinates)
+                            const char = position.line;
+                            
+                            // Determine color for this character (use globalCharIndex)
+                            const colorIndex = designParams.colorPattern.repeat 
+                                ? globalCharIndex % designParams.colorPattern.colors.length 
+                                : Math.min(globalCharIndex, designParams.colorPattern.colors.length - 1);
+                            
+                            const charColor = globalCharIndex < designParams.colorPattern.colors.length || designParams.colorPattern.repeat
+                                ? designParams.colorPattern.colors[colorIndex]
+                                : color; // fallback to fontColor
+                            
+                            this.ctx.fillStyle = charColor;
+                            
+                            console.log(`  🎨 Single char "${char}" [global:${globalCharIndex}]: color=${charColor} (pattern index ${colorIndex})`);
+                            
                             // Draw stroke first (if enabled), then fill on top
+                            if (hasStroke) {
+                                this.ctx.strokeText(char, printX, printY);
+                            }
+                            this.ctx.fillText(char, printX, printY);
+                            
+                            globalCharIndex++; // Increment for next character
+                        } else {
+                            // No colorPattern or empty position - use default color
                             if (hasStroke) {
                                 this.ctx.strokeText(position.line, printX, printY);
                             }
                             this.ctx.fillText(position.line, printX, printY);
+                            
+                            // Still increment globalCharIndex for consistency
+                            globalCharIndex += position.line.length;
                         }
                     }
                 }
