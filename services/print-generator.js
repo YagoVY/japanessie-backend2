@@ -138,15 +138,37 @@ class PrintGenerator {
     };
 
     // SPECIAL CASE: Adjust Y position for ja-noto-2 preset
-    if (designParams.presetId === 'ja-noto-2' && modifiedParams.customPosition) {
-      const originalY = modifiedParams.customPosition.y;
-      modifiedParams.customPosition.y = originalY + 10;
-      logger.info('🔧 Special adjustment for ja-noto-2: Y position shifted', {
-        presetId: 'ja-noto-2',
-        originalY: originalY,
-        adjustedY: modifiedParams.customPosition.y,
-        adjustment: '+10px'
-      });
+    if (designParams.presetId === 'ja-noto-2') {
+      // For preset_image products, adjust textCoordinates Y positions
+      if (modifiedParams.textCoordinates && modifiedParams.textCoordinates.coordinates) {
+        const adjustment = 30; // Move text down by 30px
+        modifiedParams.textCoordinates.coordinates = modifiedParams.textCoordinates.coordinates.map((coord, index) => {
+          const originalY = coord.y;
+          return {
+            ...coord,
+            y: originalY + adjustment
+          };
+        });
+        logger.info('🔧 Special adjustment for ja-noto-2: textCoordinates Y positions shifted', {
+          presetId: 'ja-noto-2',
+          coordinatesCount: modifiedParams.textCoordinates.coordinates.length,
+          adjustment: `+${adjustment}px`,
+          firstCharOriginalY: designParams.textCoordinates?.coordinates?.[0]?.y,
+          firstCharAdjustedY: modifiedParams.textCoordinates.coordinates[0]?.y
+        });
+      }
+      
+      // Also adjust customPosition if it exists (for PRESET_TEXT)
+      if (modifiedParams.customPosition) {
+        const originalY = modifiedParams.customPosition.y;
+        modifiedParams.customPosition.y = originalY + 30;
+        logger.info('🔧 Special adjustment for ja-noto-2: customPosition Y shifted', {
+          presetId: 'ja-noto-2',
+          originalY: originalY,
+          adjustedY: modifiedParams.customPosition.y,
+          adjustment: '+30px'
+        });
+      }
     }
 
     logger.info('PresetConfig applied successfully', {
