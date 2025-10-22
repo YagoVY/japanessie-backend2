@@ -49,6 +49,10 @@ class CoordinateScalingGenerator {
     htmlContent = htmlContent.replace('{{DelaGothicOneBase64}}', base64Fonts['Dela Gothic One'] || '');
     htmlContent = htmlContent.replace('{{DotGothic16Base64}}', base64Fonts['DotGothic16'] || '');
     htmlContent = htmlContent.replace('{{DarumadropOneBase64}}', base64Fonts['Darumadrop One'] || '');
+    htmlContent = htmlContent.replace('{{FZGonzaBase64}}', base64Fonts['FZGonza'] || '');
+    htmlContent = htmlContent.replace('{{AoyagiBase64}}', base64Fonts['Aoyagi'] || '');
+    htmlContent = htmlContent.replace('{{HGHeiseiKakugoW9LBase64}}', base64Fonts['HGHeiseiKakugoW9L'] || '');
+    htmlContent = htmlContent.replace('{{S2GmemoBase64}}', base64Fonts['S2Gmemo'] || '');
     
     return htmlContent;
   }

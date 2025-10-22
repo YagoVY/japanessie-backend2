@@ -37,7 +37,11 @@ const PRINT_SPECS = {
       'Mochiy Pop One',
       'Noto Sans JP',
       'Yuji Mai',
-      'Darumadrop One'
+      'Darumadrop One',
+      'FZGonza',
+      'Aoyagi',
+      'HGHeiseiKakugoW9L',
+      'S2Gmemo'
     ],
     DEFAULT: 'Yuji Syuku',
     MIN_SIZE: 12,

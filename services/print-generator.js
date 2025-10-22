@@ -66,7 +66,11 @@ class PrintGenerator {
       'Mochiy Pop One': 'Mochiy Pop One',
       'Noto Sans JP': 'Noto Sans JP',
       'Yuji Mai': 'Yuji Mai',
-      'Darumadrop One': 'Darumadrop One'
+      'Darumadrop One': 'Darumadrop One',
+      'FZGonza': 'FZGonza',
+      'Aoyagi': 'Aoyagi',
+      'HGHeiseiKakugoW9L': 'HGHeiseiKakugoW9L',
+      'S2Gmemo': 'S2Gmemo'
     };
     
     return fontMap[fontName] || fontName;
@@ -176,6 +180,10 @@ class PrintGenerator {
       htmlContent = htmlContent.replace('{{DelaGothicOneBase64}}', '');
       htmlContent = htmlContent.replace('{{DotGothic16Base64}}', '');
       htmlContent = htmlContent.replace('{{DarumadropOneBase64}}', '');
+      htmlContent = htmlContent.replace('{{FZGonzaBase64}}', '');
+      htmlContent = htmlContent.replace('{{AoyagiBase64}}', '');
+      htmlContent = htmlContent.replace('{{HGHeiseiKakugoW9LBase64}}', '');
+      htmlContent = htmlContent.replace('{{S2GmemoBase64}}', '');
       
       logger.info('System fonts will be used from /usr/share/fonts/truetype/custom/');
     } else {
@@ -207,6 +215,10 @@ class PrintGenerator {
       htmlContent = htmlContent.replace('{{DelaGothicOneBase64}}', base64Fonts['Dela Gothic One'] || '');
       htmlContent = htmlContent.replace('{{DotGothic16Base64}}', base64Fonts['DotGothic16'] || '');
       htmlContent = htmlContent.replace('{{DarumadropOneBase64}}', base64Fonts['Darumadrop One'] || '');
+      htmlContent = htmlContent.replace('{{FZGonzaBase64}}', base64Fonts['FZGonza'] || '');
+      htmlContent = htmlContent.replace('{{AoyagiBase64}}', base64Fonts['Aoyagi'] || '');
+      htmlContent = htmlContent.replace('{{HGHeiseiKakugoW9LBase64}}', base64Fonts['HGHeiseiKakugoW9L'] || '');
+      htmlContent = htmlContent.replace('{{S2GmemoBase64}}', base64Fonts['S2Gmemo'] || '');
       
       // Log if any placeholders remain (indicating missing fonts)
       const remainingPlaceholders = htmlContent.match(/\{\{[^}]+\}\}/g);

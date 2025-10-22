@@ -19,7 +19,11 @@ const FONTS_TO_ENCODE = [
   { family: 'Yuji Mai', filename: 'YujiMai-Regular.ttf' },
   { family: 'Dela Gothic One', filename: 'DelaGothicOne-Regular.ttf' },
   { family: 'DotGothic16', filename: 'DotGothic16-Regular.ttf' },
-  { family: 'Darumadrop One', filename: 'DarumadropOne-Regular.ttf' }
+  { family: 'Darumadrop One', filename: 'DarumadropOne-Regular.ttf' },
+  { family: 'FZGonza', filename: 'FZGonza.ttf' },
+  { family: 'Aoyagi', filename: 'Aoyagi.ttf' },
+  { family: 'HGHeiseiKakugoW9L', filename: 'HGHeiseiKakugoW9L.ttf' },
+  { family: 'S2Gmemo', filename: 'S2Gmemo.ttf' }
 ];
 
 async function encodeFonts() {
