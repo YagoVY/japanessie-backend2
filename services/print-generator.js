@@ -228,7 +228,7 @@ class PrintGenerator {
       
       // SPECIAL CASE: Adjust Y position for ja-noto-2 preset BEFORE applying presetConfig
       if (designParams.presetId === 'ja-noto-2' && designParams.textCoordinates && designParams.textCoordinates.coordinates) {
-        const adjustment = 30; // Move text down by 30px
+        const adjustment = 15; // Move text down by 15px
         logger.info('🔧 Adjusting ja-noto-2 textCoordinates Y positions BEFORE rendering', {
           originalFirstY: designParams.textCoordinates.coordinates[0]?.y,
           adjustment: `+${adjustment}px`
