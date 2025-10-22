@@ -36,7 +36,8 @@ const PRINT_SPECS = {
       'Klee One',
       'Mochiy Pop One',
       'Noto Sans JP',
-      'Yuji Mai'
+      'Yuji Mai',
+      'Darumadrop One'
     ],
     DEFAULT: 'Yuji Syuku',
     MIN_SIZE: 12,

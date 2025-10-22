@@ -41,6 +41,14 @@ class CoordinateScalingGenerator {
     htmlContent = htmlContent.replace('{{HuninnBase64}}', base64Fonts['Huninn'] || '');
     htmlContent = htmlContent.replace('{{RampartOneBase64}}', base64Fonts['Rampart One'] || '');
     htmlContent = htmlContent.replace('{{CherryBombOneBase64}}', base64Fonts['Cherry Bomb One'] || '');
+    htmlContent = htmlContent.replace('{{KiwiMaruBase64}}', base64Fonts['Kiwi Maru'] || '');
+    htmlContent = htmlContent.replace('{{KleeOneBase64}}', base64Fonts['Klee One'] || '');
+    htmlContent = htmlContent.replace('{{MochiyPopOneBase64}}', base64Fonts['Mochiy Pop One'] || '');
+    htmlContent = htmlContent.replace('{{NotoSansJPBase64}}', base64Fonts['Noto Sans JP'] || '');
+    htmlContent = htmlContent.replace('{{YujiMaiBase64}}', base64Fonts['Yuji Mai'] || '');
+    htmlContent = htmlContent.replace('{{DelaGothicOneBase64}}', base64Fonts['Dela Gothic One'] || '');
+    htmlContent = htmlContent.replace('{{DotGothic16Base64}}', base64Fonts['DotGothic16'] || '');
+    htmlContent = htmlContent.replace('{{DarumadropOneBase64}}', base64Fonts['Darumadrop One'] || '');
     
     return htmlContent;
   }

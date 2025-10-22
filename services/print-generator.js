@@ -65,7 +65,8 @@ class PrintGenerator {
       'Klee One': 'Klee One',
       'Mochiy Pop One': 'Mochiy Pop One',
       'Noto Sans JP': 'Noto Sans JP',
-      'Yuji Mai': 'Yuji Mai'
+      'Yuji Mai': 'Yuji Mai',
+      'Darumadrop One': 'Darumadrop One'
     };
     
     return fontMap[fontName] || fontName;
@@ -165,6 +166,7 @@ class PrintGenerator {
       htmlContent = htmlContent.replace('{{YujiMaiBase64}}', '');
       htmlContent = htmlContent.replace('{{DelaGothicOneBase64}}', '');
       htmlContent = htmlContent.replace('{{DotGothic16Base64}}', '');
+      htmlContent = htmlContent.replace('{{DarumadropOneBase64}}', '');
       
       logger.info('System fonts will be used from /usr/share/fonts/truetype/custom/');
     } else {
@@ -195,6 +197,7 @@ class PrintGenerator {
       htmlContent = htmlContent.replace('{{YujiMaiBase64}}', base64Fonts['Yuji Mai'] || '');
       htmlContent = htmlContent.replace('{{DelaGothicOneBase64}}', base64Fonts['Dela Gothic One'] || '');
       htmlContent = htmlContent.replace('{{DotGothic16Base64}}', base64Fonts['DotGothic16'] || '');
+      htmlContent = htmlContent.replace('{{DarumadropOneBase64}}', base64Fonts['Darumadrop One'] || '');
       
       // Log if any placeholders remain (indicating missing fonts)
       const remainingPlaceholders = htmlContent.match(/\{\{[^}]+\}\}/g);
