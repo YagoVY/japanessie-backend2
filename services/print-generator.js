@@ -137,6 +137,18 @@ class PrintGenerator {
       } : null
     };
 
+    // SPECIAL CASE: Adjust Y position for ja-noto-2 preset
+    if (designParams.presetId === 'ja-noto-2' && modifiedParams.customPosition) {
+      const originalY = modifiedParams.customPosition.y;
+      modifiedParams.customPosition.y = originalY + 10;
+      logger.info('🔧 Special adjustment for ja-noto-2: Y position shifted', {
+        presetId: 'ja-noto-2',
+        originalY: originalY,
+        adjustedY: modifiedParams.customPosition.y,
+        adjustment: '+10px'
+      });
+    }
+
     logger.info('PresetConfig applied successfully', {
       font: modifiedParams.fontFamily,
       fontSize: modifiedParams.fontSize,
