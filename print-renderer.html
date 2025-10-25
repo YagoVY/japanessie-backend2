@@ -1198,6 +1198,49 @@
                     const textMetrics = this.ctx.measureText(position.line);
                     console.log(`  Text metrics: width=${textMetrics.width}, ascent=${textMetrics.actualBoundingBoxAscent}, descent=${textMetrics.actualBoundingBoxDescent}`);
                     
+                    // Helper function to draw a character with optional rotation for vertical ー
+                    const drawCharacter = (char, x, y, orientation) => {
+                        // Check if we need to rotate the ー character in vertical orientation
+                        if (orientation === 'vertical' && char === 'ー') {
+                            this.ctx.save();
+                            
+                            // Get character metrics for proper positioning
+                            const charWidth = this.ctx.measureText(char).width;
+                            
+                            // Calculate vertical offset to improve spacing (match frontend)
+                            const yOffset = printFontSize * 0.15;
+                            
+                            // Move to rotation point (center of character, with vertical offset)
+                            this.ctx.translate(x + charWidth / 2, y - charWidth / 2 + yOffset);
+                            
+                            // Rotate 90 degrees (Math.PI / 2 radians)
+                            this.ctx.rotate(Math.PI / 2);
+                            
+                            // Set text alignment for rotated character
+                            this.ctx.textAlign = 'center';
+                            this.ctx.textBaseline = 'middle';
+                            
+                            // Draw at origin after transformation
+                            if (hasStroke) {
+                                this.ctx.strokeText(char, 0, 0);
+                            }
+                            this.ctx.fillText(char, 0, 0);
+                            
+                            // Restore previous context state
+                            this.ctx.restore();
+                            
+                            // Restore text alignment for subsequent characters
+                            this.ctx.textAlign = 'left';
+                            this.ctx.textBaseline = 'alphabetic';
+                        } else {
+                            // Normal rendering for non-ー characters or horizontal orientation
+                            if (hasStroke) {
+                                this.ctx.strokeText(char, x, y);
+                            }
+                            this.ctx.fillText(char, x, y);
+                        }
+                    };
+                    
                     // Draw position marker for debugging
                     if (this.debugMode) {
                         this.ctx.save();
@@ -1236,11 +1279,8 @@
                                 console.log(`    🎨 Char "${char}" [global:${globalCharIndex}, local:${j}]: color=${charColor} (pattern index ${colorIndex})`);
                             }
                             
-                            // Draw stroke first (if enabled), then fill on top
-                            if (hasStroke) {
-                                this.ctx.strokeText(char, currentX, printY);
-                            }
-                            this.ctx.fillText(char, currentX, printY);
+                            // Draw character with rotation support for vertical ー
+                            drawCharacter(char, currentX, printY, orientation);
                             
                             const charWidth = this.ctx.measureText(char).width;
                             const extraSpacing = printFontSize * 0.12;
@@ -1274,11 +1314,8 @@
                                 
                                 console.log(`    🎨 Char "${char}" [global:${globalCharIndex}, local:${j}]: color=${charColor} (pattern index ${colorIndex})`);
                                 
-                                // Draw stroke first (if enabled), then fill on top
-                                if (hasStroke) {
-                                    this.ctx.strokeText(char, currentX, printY);
-                                }
-                                this.ctx.fillText(char, currentX, printY);
+                                // Draw character with rotation support for vertical ー
+                                drawCharacter(char, currentX, printY, orientation);
                                 
                                 const charWidth = this.ctx.measureText(char).width;
                                 currentX += charWidth;
@@ -1301,22 +1338,27 @@
                             
                             console.log(`  🎨 Single char "${char}" [global:${globalCharIndex}]: color=${charColor} (pattern index ${colorIndex})`);
                             
-                            // Draw stroke first (if enabled), then fill on top
-                            if (hasStroke) {
-                                this.ctx.strokeText(char, printX, printY);
-                            }
-                            this.ctx.fillText(char, printX, printY);
+                            // Draw character with rotation support for vertical ー
+                            drawCharacter(char, printX, printY, orientation);
                             
                             globalCharIndex++; // Increment for next character
                         } else {
                             // No colorPattern or empty position - use default color
-                            if (hasStroke) {
-                                this.ctx.strokeText(position.line, printX, printY);
+                            // For multi-character positions, draw character by character to support rotation
+                            if (position.line.length > 1) {
+                                let currentX = printX;
+                                for (let j = 0; j < position.line.length; j++) {
+                                    const char = position.line[j];
+                                    drawCharacter(char, currentX, printY, orientation);
+                                    const charWidth = this.ctx.measureText(char).width;
+                                    currentX += charWidth;
+                                    globalCharIndex++;
+                                }
+                            } else {
+                                // Single character without color pattern
+                                drawCharacter(position.line, printX, printY, orientation);
+                                globalCharIndex += position.line.length;
                             }
-                            this.ctx.fillText(position.line, printX, printY);
-                            
-                            // Still increment globalCharIndex for consistency
-                            globalCharIndex += position.line.length;
                         }
                     }
                 }

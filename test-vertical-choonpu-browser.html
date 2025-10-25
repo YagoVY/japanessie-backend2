@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertical ー (Chōonpu) Rotation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .test-case {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        canvas {
+            border: 2px solid #333;
+            background: white;
+            margin: 10px 0;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        .success {
+            background: #c8e6c9;
+            border-left-color: #4CAF50;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff3e0;
+            border-radius: 5px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .download-btn {
+            background: #2196F3;
+        }
+        .download-btn:hover {
+            background: #0b7dda;
+        }
+        .expected {
+            font-style: italic;
+            color: #666;
+            margin: 5px 0;
+        }
+        .canvas-container {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        .canvas-label {
+            font-weight: bold;
+            margin-top: 5px;
+            color: #333;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Vertical ー (Chōonpu) Rotation Test</h1>
+        
+        <div class="info">
+            <strong>📋 What This Tests:</strong><br>
+            This test verifies that the ー character rotates 90 degrees to display as a vertical pipe (|) 
+            when rendering vertical Japanese text. You should see the ー appearing as <strong>|</strong> (vertical) 
+            instead of <strong>ー</strong> (horizontal).
+        </div>
+
+        <div class="controls">
+            <button onclick="runAllTests()">🔄 Run All Tests</button>
+            <button class="download-btn" onclick="downloadAllImages()">💾 Download All Images</button>
+        </div>
+
+        <div id="test-results"></div>
+
+        <div class="info success" style="margin-top: 30px;">
+            <strong>✅ Visual Inspection Guide:</strong>
+            <ul style="margin: 10px 0;">
+                <li>Look for the ー character - it should appear as a vertical pipe <strong>|</strong></li>
+                <li>The vertical pipe should be centered between characters</li>
+                <li>The vertical pipe should be positioned slightly below center for proper spacing</li>
+                <li>Compare "Before" (no rotation) vs "After" (with rotation) for each test</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Test cases with vertical text containing ー
+        const testCases = [
+            {
+                name: 'ルーカス (Lucas)',
+                text: 'ルーカス',
+                description: 'Should show vertical pipe between ル and カ',
+                expectedPipes: 1
+            },
+            {
+                name: 'コーヒー (Coffee)',
+                text: 'コーヒー',
+                description: 'Should show two vertical pipes',
+                expectedPipes: 2
+            },
+            {
+                name: 'カー (Car)',
+                text: 'カー',
+                description: 'Should show one vertical pipe at end',
+                expectedPipes: 1
+            },
+            {
+                name: 'キー (Key)',
+                text: 'キー',
+                description: 'Should show one vertical pipe at end',
+                expectedPipes: 1
+            },
+            {
+                name: 'スーパー (Super)',
+                text: 'スーパー',
+                description: 'Should show two vertical pipes',
+                expectedPipes: 2
+            }
+        ];
+
+        // Helper function to draw a character with optional rotation for vertical ー
+        function drawCharacter(ctx, char, x, y, orientation, fontSize, hasStroke, strokeColor, strokeWidth) {
+            // Check if we need to rotate the ー character in vertical orientation
+            if (orientation === 'vertical' && char === 'ー') {
+                ctx.save();
+                
+                // Get character metrics for proper positioning
+                const charWidth = ctx.measureText(char).width;
+                
+                // Calculate vertical offset to improve spacing (match backend)
+                const yOffset = fontSize * 0.15;
+                
+                // Move to rotation point (center of character, with vertical offset)
+                ctx.translate(x + charWidth / 2, y - charWidth / 2 + yOffset);
+                
+                // Rotate 90 degrees (Math.PI / 2 radians)
+                ctx.rotate(Math.PI / 2);
+                
+                // Set text alignment for rotated character
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Draw at origin after transformation
+                if (hasStroke) {
+                    ctx.strokeText(char, 0, 0);
+                }
+                ctx.fillText(char, 0, 0);
+                
+                // Restore previous context state
+                ctx.restore();
+                
+                // Restore text alignment for subsequent characters
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+            } else {
+                // Normal rendering for non-ー characters or horizontal orientation
+                if (hasStroke) {
+                    ctx.strokeText(char, x, y);
+                }
+                ctx.fillText(char, x, y);
+            }
+        }
+
+        // Draw vertical text on canvas
+        function drawVerticalText(canvas, ctx, text, withRotation) {
+            const fontSize = 60;
+            const fontFamily = 'Yuji Syuku, Noto Sans JP, sans-serif';
+            const color = '#000000';
+            const strokeColor = '#ffffff';
+            const strokeWidth = 2;
+            const orientation = 'vertical';
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Set up context
+            ctx.font = `${fontSize}px ${fontFamily}`;
+            ctx.fillStyle = color;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = strokeWidth;
+            ctx.lineJoin = 'round';
+            
+            // Calculate starting position (centered)
+            const startX = canvas.width / 2 - fontSize / 2;
+            const startY = 80;
+            const charSpacing = fontSize * 1.2;
+            
+            // Draw each character vertically
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const x = startX;
+                const y = startY + (i * charSpacing);
+                
+                if (withRotation) {
+                    // Use the rotation logic for ー
+                    drawCharacter(ctx, char, x, y, orientation, fontSize, true, strokeColor, strokeWidth);
+                } else {
+                    // Draw without rotation (to show "before" state)
+                    ctx.strokeText(char, x, y);
+                    ctx.fillText(char, x, y);
+                }
+            }
+        }
+
+        // Create a test case display
+        function createTestCase(testCase, index) {
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-case';
+            testDiv.innerHTML = `
+                <h3>Test ${index + 1}: ${testCase.name}</h3>
+                <p><strong>Text:</strong> "${testCase.text}"</p>
+                <p class="expected"><strong>Expected:</strong> ${testCase.description}</p>
+                <div>
+                    <div class="canvas-container">
+                        <canvas id="before-${index}" width="200" height="400"></canvas>
+                        <div class="canvas-label">❌ Before (No Rotation)</div>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="after-${index}" width="200" height="400"></canvas>
+                        <div class="canvas-label">✅ After (With Rotation)</div>
+                    </div>
+                </div>
+                <button onclick="downloadCanvas('after-${index}', '${testCase.name.replace(/[^a-zA-Z0-9]/g, '_')}')">
+                    💾 Download Image
+                </button>
+            `;
+            return testDiv;
+        }
+
+        // Run all tests
+        function runAllTests() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '';
+            
+            testCases.forEach((testCase, index) => {
+                const testDiv = createTestCase(testCase, index);
+                resultsDiv.appendChild(testDiv);
+                
+                // Wait for fonts to load, then draw
+                setTimeout(() => {
+                    const beforeCanvas = document.getElementById(`before-${index}`);
+                    const afterCanvas = document.getElementById(`after-${index}`);
+                    
+                    const beforeCtx = beforeCanvas.getContext('2d');
+                    const afterCtx = afterCanvas.getContext('2d');
+                    
+                    // Draw without rotation (before)
+                    drawVerticalText(beforeCanvas, beforeCtx, testCase.text, false);
+                    
+                    // Draw with rotation (after)
+                    drawVerticalText(afterCanvas, afterCtx, testCase.text, true);
+                }, 100);
+            });
+        }
+
+        // Download a specific canvas
+        function downloadCanvas(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = `${filename}_vertical_choonpu.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Download all images
+        function downloadAllImages() {
+            testCases.forEach((testCase, index) => {
+                setTimeout(() => {
+                    downloadCanvas(`after-${index}`, testCase.name.replace(/[^a-zA-Z0-9]/g, '_'));
+                }, index * 200);
+            });
+        }
+
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>
+
